@@ -1,0 +1,60 @@
+/* Mobile-first responsive overrides for secure UI
+ * Consolidated all (max-width:900px) blocks into a single section to reduce cascade complexity.
+ */
+@media (max-width: 900px) {
+  :root { --card-radius: 12px; }
+
+  /* Layout: stack everything single-column */
+  #irma-pane, #josh-pane { display: flex !important; flex-direction: column !important; gap: 1rem !important; align-items: stretch !important; }
+  #left-col, #right-col, #josh-pane > *, #irma-pane > * { width: 100% !important; display: block !important; box-sizing: border-box !important; max-width: 100% !important; margin: 0 !important; }
+  #left-col, #right-col { grid-column: auto !important; grid-row: auto !important; }
+
+  /* Pane visibility: only active pane appears */
+  #tabs-root [data-pane] { display: none !important; }
+  #tabs-root [data-pane].active { display: block !important; }
+
+  /* Cards & spacing */
+  .card { padding: 1rem; border-radius: var(--card-radius); width: 100% !important; display: block !important; margin: 0 !important; }
+  .container, #tabs-root { padding-left: 1rem; padding-right: 1rem; max-width: 100% !important; }
+
+  /* Forms */
+  #irma-form input, #irma-form textarea, #josh-request-form input, #josh-request-form textarea { font-size: 1rem; padding: 1rem; border-radius: 10px; min-height: 48px; }
+  #irma-form textarea, #josh-request-form textarea { min-height: 160px; }
+
+  /* Buttons */
+  .btn-primary, .btn-schedule, .btn-accept, .btn-deny, .btn-acknowledge { padding: 0.9rem 1rem; font-size: 1.05rem; border-radius: 10px; }
+
+  /* Pending requests list */
+  #pending-requests { max-height: 320px; overflow-y: auto; }
+  .request-card { margin-bottom: 0.75rem; }
+
+  /* Request/status containers: allow natural height */
+  #pending-requests, #josh-pending-requests, #job-status-list { max-height: none !important; height: auto !important; overflow: visible !important; }
+  #job-status-list { flex-direction: column; }
+
+  /* Tabs */
+  .tabs { flex-wrap: wrap; display: flex; gap: 0.5rem; }
+  .tabs button { padding: 0.5rem 0.75rem; flex: 1 1 auto; min-width: 0; }
+
+  /* Calendar */
+  #calendar-container .card { width: 100% !important; }
+  #calendar-grid { grid-template-columns: repeat(7, 1fr) !important; gap: 6px !important; overflow: hidden; }
+  .calendar-day { min-height: 80px; padding: 8px; position: relative; }
+  .calendar-nav { gap: 0.5rem; }
+  /* Smaller cell tweak for very narrow widths */
+  @supports (min-width: 0px) { .calendar-day { min-height: 64px; } }
+  #calendar-grid .event-chip { display: none !important; }
+  #calendar-grid .event-count-badge { position: absolute; top: 4px; right: 4px; background: #2563eb; color: #fff; border-radius: 50%; width: 1.6em; height: 1.6em; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+
+  /* Modal */
+  .modal-content { width: calc(100% - 32px); max-width: 720px; }
+
+  /* Global adjustments */
+  html, body { -webkit-text-size-adjust: 100%; }
+  *, *:before, *:after { box-sizing: border-box !important; }
+}
+
+/* Touch-specific larger hit targets */
+@media (pointer: coarse) {
+  .btn-primary, .btn-schedule, .btn-accept, .btn-deny { min-height: 48px; }
+}

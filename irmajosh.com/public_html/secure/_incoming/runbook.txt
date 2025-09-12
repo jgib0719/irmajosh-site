@@ -1,0 +1,125 @@
+I have separated the HTML, CSS, and JavaScript from our preview into the following production-ready files.
+
+I am providing a completely new ui.js file, which will be the heart of your application, and a new styles.css file to ensure the visual presentation is perfect. I have also made necessary additions to your api.js to support all the new features we've built.
+
+Integration Runbook
+Here is the runbook for integrating the new dashboard into your existing website.
+
+IrmaJosh Dashboard Integration Runbook
+This document outlines the steps required to integrate the new, fully-featured dashboard UI into the existing irmajosh.com PHP backend.
+
+1. File Deployment
+The following files have been generated and should be used to completely replace the existing files on your server:
+
+public_html/secure/js/ui.js
+
+public_html/secure/css/styles.css
+
+public_html/secure/js/api.js
+
+Action: Overwrite the files at these locations with the new versions provided. No other files in the repository need to be changed.
+
+2. Backend API Implementation
+The new UI relies on a specific set of API endpoints to function. The JavaScript in ui.js makes calls to functions defined in api.js, which in turn make HTTP requests to your PHP backend.
+
+The backend developer must ensure the PHP scripts in public_html/secure/api/ can handle the following requests:
+
+requests.php
+GET /secure/api/requests.php?from=josh
+
+Called By: api.irma.getScheduleRequests()
+
+Purpose: Fetches all scheduling requests that Josh has submitted for Irma.
+
+Required Action: Should query the requests table and return a JSON array of items submitted by Josh.
+
+POST /secure/api/requests.php
+
+Called By: api.josh.sendScheduleRequest()
+
+Purpose: Allows Josh to submit a new scheduling request to Irma.
+
+Required Action: Should insert a new record into the requests table with a title and notes.
+
+DELETE /secure/api/requests.php
+
+Called By: api.irma.deleteScheduleRequest()
+
+Purpose: Removes a scheduling request from the list after Irma has scheduled it.
+
+Required Action: Should delete a record from the requests table based on the provided id.
+
+jobs.php
+GET /secure/api/jobs.php?status=pending
+
+Called By: api.josh.getPendingJobs()
+
+Purpose: Fetches all jobs sent by Irma that Josh has not yet actioned.
+
+Required Action: Should query the jobs table for records where status is 'pending'.
+
+GET /secure/api/jobs.php?status=non-pending
+
+Called By: api.irma.getJobStatuses()
+
+Purpose: Fetches jobs that Josh has either accepted or denied for Irma to see.
+
+Required Action: Should query the jobs table for records where status is 'accepted' OR 'denied'.
+
+POST /secure/api/jobs.php
+
+Called By: api.irma.sendJobToJosh()
+
+Purpose: Allows Irma to send a new job to Josh.
+
+Required Action: Should insert a new record into the jobs table with title, notes, and a default status of 'pending'.
+
+PATCH /secure/api/jobs.php
+
+Called By: api.josh.updateJobStatus()
+
+Purpose: Allows Josh to accept or deny a pending job.
+
+Required Action: Should update the status of a job record (identified by id) to either 'accepted' or 'denied'.
+
+DELETE /secure/api/jobs.php
+
+Called By: api.irma.acknowledgeJob()
+
+Purpose: Allows Irma to remove an accepted or denied job from her view after scheduling or acknowledging it.
+
+Required Action: Should delete a record from the jobs table based on the provided id.
+
+events.php
+This file should support full CRUD (Create, Read, Update, Delete) operations for calendar events, as it already appears to do. The new UI uses the following functions:
+
+api.events.list() -> GET /secure/api/events.php
+
+api.events.create() -> POST /secure/api/events.php
+
+api.events.update() -> PATCH /secure/api/events.php
+
+api.events.delete() -> DELETE /secure/api/events.php
+
+No changes should be needed for events.php if it already supports these standard operations.
+
+3. Key UI Keywords & DOM References
+The new UI is built dynamically by ui.js. All content is injected into the <div id="app"></div> element within public_html/secure/index.html. The script generates a consistent structure with the following key IDs for reference:
+
+#tabs-root: The main container for the entire dashboard interface.
+
+#irma-pane: The container for Irma's dashboard view.
+
+#josh-pane: The container for Josh's dashboard view.
+
+#pending-requests-container: (Irma's view) Contains the list of scheduling requests from Josh.
+
+#job-status-container: (Irma's view) Contains the list of jobs Josh has accepted or denied.
+
+#josh-pending-requests-card: (Josh's view) Contains the list of pending jobs from Irma.
+
+#calendar-container: The container for the shared calendar.
+
+Modal IDs: #scheduling-modal, #details-modal, #confirm-modal.
+
+This concludes the integration guide. By replacing the three specified files and ensuring the backend API endpoints are implemented as described, the new dashboard will be fully operational.

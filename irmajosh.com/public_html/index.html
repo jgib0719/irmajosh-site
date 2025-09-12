@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sign In</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/secure/favicon.ico">
+  <style>
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#0b1020;color:#e6eef8}
+    .page-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+  .card{padding:1.25rem 1.5rem;border-radius:.75rem;background:#0f1724;box-shadow:0 14px 40px rgba(2,6,23,.5);max-width:720px;width:auto;text-align:center}
+  h1{margin:0 0 .25rem 0;font-size:1.25rem}
+  p{margin:0 0 .75rem 0;opacity:.85;font-size:.95rem}
+  .gsi-wrap{margin-top:.5rem;display:flex;justify-content:center}
+  .gsi-box{width:fit-content;min-width:220px}
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="card">
+      <h1>Welcome IrmaJosh</h1>
+      <p>Collaborative Scheduling</p>
+      <div class="gsi-wrap"><div class="gsi-box" id="g_id_signin"></div></div>
+    </div>
+  </div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="/js/login-exchange.js?v=1756953325"></script>
+  <script type="module" src="/js/login-init.js"></script>
+</body>
+</html>
