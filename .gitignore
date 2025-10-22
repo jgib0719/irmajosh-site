@@ -1,0 +1,30 @@
+# Environment configuration
+.env
+.env.local
+.env.*.local
+
+# Composer dependencies
+/vendor/
+
+# Runtime storage
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
+
+# Backups (NEVER commit these)
+/backups/
+*.sql
+*.sql.gz
+*.gpg
+
+# IDE and system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~
