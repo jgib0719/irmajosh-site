@@ -1,0 +1,23 @@
+{
+    "name": "irmajosh/irmajosh-com",
+    "description": "Private shared calendar and task management application",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "google/apiclient": "^2.15",
+        "vlucas/phpdotenv": "^5.5",
+        "phpmailer/phpmailer": "^6.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "classmap-authoritative": true
+    }
+}
