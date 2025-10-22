@@ -1,0 +1,3 @@
+82a87136846b696782a693591decca1a283eb8f76647f727b40b49b1d4e49b90  public_html/assets/js/vendor/fullcalendar.min.js
+b3bdcf5c741897a53648b1207fff0469a0d61901429ba1f6e88f98ebd84e669e  public_html/assets/js/vendor/htmx.min.js
+100abe5ff857778e0c952382926f617213c94fbf2f4385014d3ec5064425f6a1  public_html/assets/css/vendor/fullcalendar.min.css
