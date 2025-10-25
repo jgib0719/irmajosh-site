@@ -7,10 +7,10 @@
 /vendor/
 
 # Runtime storage
-/storage/logs/*
-!/storage/logs/.gitkeep
-/storage/cache/*
-!/storage/cache/.gitkeep
+/storage/
+
+# Archive folder
+/.archive/
 
 # Backups (NEVER commit these)
 /backups/
