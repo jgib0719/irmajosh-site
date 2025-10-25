@@ -32,8 +32,10 @@ class CalendarController extends BaseController
     {
         $this->requireAuth();
         
-        // Return empty events array - Google Calendar integration removed
-        $this->json([]);
+        $this->json([
+            'error' => 'Calendar integration disabled',
+            'message' => 'Google Calendar integration has been removed'
+        ], 501);
     }
     
     /**
@@ -83,8 +85,8 @@ class CalendarController extends BaseController
         $this->requireAuth();
         
         $this->json([
-            'success' => true,
+            'error' => 'Calendar integration disabled',
             'message' => 'Google Calendar integration has been removed'
-        ]);
+        ], 501);
     }
 }

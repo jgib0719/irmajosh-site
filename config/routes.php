@@ -43,7 +43,7 @@ return [
         'method' => 'POST',
         'path' => '/auth/logout',
         'handler' => [\App\Controllers\AuthController::class, 'logout'],
-        'middleware' => ['authMiddleware']
+        'middleware' => ['authMiddleware', 'rateLimitMiddleware']
     ],
     
     // ========================================================================
@@ -79,28 +79,28 @@ return [
         'method' => 'POST',
         'path' => '/calendar/events',
         'handler' => [\App\Controllers\CalendarController::class, 'createEvent'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     [
         'method' => 'PUT',
         'path' => '/calendar/events/{id}',
         'handler' => [\App\Controllers\CalendarController::class, 'updateEvent'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     [
         'method' => 'DELETE',
         'path' => '/calendar/events/{id}',
         'handler' => [\App\Controllers\CalendarController::class, 'deleteEvent'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     [
         'method' => 'POST',
         'path' => '/calendar/sync',
         'handler' => [\App\Controllers\CalendarController::class, 'sync'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     // ========================================================================
@@ -132,21 +132,21 @@ return [
         'method' => 'POST',
         'path' => '/tasks',
         'handler' => [\App\Controllers\TaskController::class, 'create'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     [
         'method' => 'PUT',
         'path' => '/tasks/{id}',
         'handler' => [\App\Controllers\TaskController::class, 'update'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     [
         'method' => 'DELETE',
         'path' => '/tasks/{id}',
         'handler' => [\App\Controllers\TaskController::class, 'delete'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     // ========================================================================
@@ -178,14 +178,14 @@ return [
         'method' => 'PUT',
         'path' => '/schedule/{id}/status',
         'handler' => [\App\Controllers\ScheduleController::class, 'updateStatus'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     [
         'method' => 'DELETE',
         'path' => '/schedule/{id}',
         'handler' => [\App\Controllers\ScheduleController::class, 'deleteRequest'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware']
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     // ========================================================================
@@ -196,7 +196,7 @@ return [
         'method' => 'POST',
         'path' => '/locale/switch',
         'handler' => [\App\Controllers\LocaleController::class, 'switch'],
-        'middleware' => ['csrfMiddleware']
+        'middleware' => ['csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     // ========================================================================
