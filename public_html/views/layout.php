@@ -49,6 +49,10 @@ $locale = getAppLocale();
     
     <?php require __DIR__ . '/components/footer.php'; ?>
     
+    <!-- Utility JavaScript -->
+    <script src="/assets/js/modal.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
+    <script src="/assets/js/form-utils.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
+    
     <!-- Application JavaScript -->
     <script src="/assets/js/app.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
     

@@ -3,7 +3,7 @@
  * Implements caching strategies and offline support
  */
 
-const CACHE_VERSION = 'v4-20251025-0646';
+const CACHE_VERSION = 'v4-20251025-1200';
 const CACHE_NAME = `irmajosh-${CACHE_VERSION}`;
 
 // Assets to cache immediately on install
@@ -16,20 +16,20 @@ const PRECACHE_ASSETS = [
     '/manifest.json'
 ];
 
-// Routes that should always fetch from network
+// Routes that should always fetch from network (exact path or prefix match)
 const NETWORK_ONLY_ROUTES = [
     '/auth/',
     '/api/',
-    '/health',
     '/csp-report'
 ];
 
-// Routes that should try network first, then cache
+// Routes that should try network first, then cache (no overlap with network-only)
 const NETWORK_FIRST_ROUTES = [
     '/dashboard',
     '/calendar',
     '/tasks',
-    '/schedule'
+    '/schedule',
+    '/health'
 ];
 
 // Maximum age for cached responses (7 days)
@@ -215,16 +215,25 @@ async function fetchAndCache(request) {
         
         return response;
     } catch (error) {
-        console.error('[ServiceWorker] Fetch failed:', error);
+        console.error('[ServiceWorker] Fetch and cache failed:', error.message || error);
+        
+        // Try to return cached version if available
+        const cached = await caches.match(request);
+        if (cached) {
+            console.log('[ServiceWorker] Returning stale cache after error:', request.url);
+            return cached;
+        }
         
         // Return offline page for navigation requests
         if (request.mode === 'navigate') {
             const offlinePage = await caches.match('/views/offline.html');
             if (offlinePage) {
+                console.log('[ServiceWorker] Returning offline page');
                 return offlinePage;
             }
         }
         
+        // Re-throw if we can't handle it
         throw error;
     }
 }

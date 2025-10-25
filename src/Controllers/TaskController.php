@@ -65,15 +65,33 @@ class TaskController extends BaseController
             $this->redirect('/tasks/shared');
         }
         
-        // Convert is_shared to boolean
-        $isShared = $this->getPost('is_shared') === '1' || $this->getPost('is_shared') === 1 || $this->getPost('is_shared') === true;
+        // Validate and sanitize is_shared input
+        $isShared = false;
+        if (isset($_POST['is_shared'])) {
+            $isSharedRaw = $_POST['is_shared'];
+            if (in_array($isSharedRaw, ['1', '0', 1, 0, true, false], true)) {
+                $isShared = in_array($isSharedRaw, ['1', 1, true], true);
+            } else {
+                if ($this->isHtmx()) {
+                    $this->json(['error' => 'Invalid is_shared value'], 400);
+                }
+                $this->setFlash('error', 'Invalid input');
+                $this->redirect('/tasks/shared');
+            }
+        }
+        
+        // Validate status if provided
+        $status = $this->getPost('status', 'pending');
+        if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'], true)) {
+            $status = 'pending';
+        }
         
         $taskData = [
             'user_id' => $user['id'],
             'title' => sanitizeInput($this->getPost('title')),
             'description' => sanitizeInput($this->getPost('description', '')),
             'is_shared' => $isShared,
-            'status' => $this->getPost('status', 'pending'),
+            'status' => $status,
             'due_date' => $this->getPost('due_date'),
         ];
         
@@ -83,7 +101,7 @@ class TaskController extends BaseController
             logMessage("Failed to create task: " . $e->getMessage(), 'ERROR');
             
             if ($this->isHtmx()) {
-                $this->json(['error' => 'Failed to create task: ' . $e->getMessage()], 500);
+                $this->json(['error' => 'Failed to create task'], 500);
             }
             
             $this->setFlash('error', 'Failed to create task');
@@ -132,12 +150,21 @@ class TaskController extends BaseController
             $taskData['description'] = sanitizeInput($this->getPost('description'));
         }
         
+        // Validate status if provided
         if ($this->getPost('status')) {
-            $taskData['status'] = $this->getPost('status');
+            $status = $this->getPost('status');
+            if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'], true)) {
+                $this->json(['error' => 'Invalid status value'], 400);
+            }
+            $taskData['status'] = $status;
         }
         
         if ($this->getPost('due_date') !== null) {
             $taskData['due_date'] = $this->getPost('due_date');
+        }
+        
+        if (empty($taskData)) {
+            $this->json(['error' => 'No data to update'], 400);
         }
         
         $success = Task::update($taskId, $taskData);

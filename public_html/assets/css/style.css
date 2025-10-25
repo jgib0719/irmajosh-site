@@ -447,10 +447,14 @@ a:hover {
     box-shadow: var(--shadow-sm);
 }
 
+/* Card title - consolidated definition */
 .card-title {
     font-size: 1.125rem;
     font-weight: 600;
     margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
 .card-grid {
@@ -502,14 +506,6 @@ a:hover {
     margin-bottom: var(--spacing-md);
 }
 
-.card-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
 .card-icon {
     font-size: 1.25rem;
 }
@@ -528,11 +524,16 @@ a:hover {
     color: var(--text-primary);
 }
 
+/* Empty state - consolidated definition */
 .empty-state {
-    color: var(--text-muted);
     text-align: center;
     padding: var(--spacing-xl);
-    font-style: italic;
+    color: var(--text-secondary);
+}
+
+.empty-state p {
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.125rem;
 }
 
 .task-list,
@@ -969,18 +970,6 @@ a:hover {
     background: #fef3c7;
     border-color: var(--warning);
     color: #92400e;
-}
-
-/* ========== Empty State ========== */
-.empty-state {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--text-secondary);
-}
-
-.empty-state p {
-    margin-bottom: var(--spacing-lg);
-    font-size: 1.125rem;
 }
 
 /* ========== Responsive ========== */

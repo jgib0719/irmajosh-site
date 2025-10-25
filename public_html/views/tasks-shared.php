@@ -257,13 +257,7 @@ document.getElementById('editTaskForm').addEventListener('submit', async functio
     }
 });
 
-function openModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
-}
+// Modal functions are now in modal.js (loaded globally)
 
 function editTask(task) {
     document.getElementById('editTaskId').value = task.id;

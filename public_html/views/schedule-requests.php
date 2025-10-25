@@ -177,13 +177,7 @@ function removeSlot(button) {
     button.parentElement.remove();
 }
 
-function openModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
-}
+// Modal functions are now in modal.js (loaded globally)
 
 document.getElementById('createRequestForm').addEventListener('submit', async function(e) {
     e.preventDefault();
