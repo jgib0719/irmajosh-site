@@ -119,7 +119,77 @@ ob_start();
             </a>
         </div>
     </div>
+    
+    <!-- Notification Settings -->
+    <div class="dashboard-card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h2 class="card-title">
+                <span class="card-icon">🔔</span>
+                Push Notifications
+            </h2>
+        </div>
+        <div class="card-content">
+            <div id="notification-status" class="notification-status">
+                <p class="notification-text">Loading notification status...</p>
+            </div>
+            <button id="notification-toggle" class="btn btn-primary" style="margin-top: 1rem; display: none;">
+                Enable Notifications
+            </button>
+        </div>
+    </div>
 </div>
+
+<script nonce="<?= cspNonce() ?>">
+document.addEventListener('DOMContentLoaded', async function() {
+    const statusDiv = document.getElementById('notification-status');
+    const toggleBtn = document.getElementById('notification-toggle');
+    
+    if (!window.PushNotifications) {
+        statusDiv.innerHTML = '<p class="notification-text">Push notifications not supported</p>';
+        return;
+    }
+    
+    async function updateStatus() {
+        const isSubscribed = await PushNotifications.isSubscribed();
+        
+        if (isSubscribed) {
+            statusDiv.innerHTML = '<p class="notification-text" style="color: var(--color-success);">✓ Notifications enabled</p>';
+            toggleBtn.textContent = 'Disable Notifications';
+            toggleBtn.classList.remove('btn-primary');
+            toggleBtn.classList.add('btn-secondary');
+        } else {
+            statusDiv.innerHTML = '<p class="notification-text">Notifications disabled</p>';
+            toggleBtn.textContent = 'Enable Notifications';
+            toggleBtn.classList.remove('btn-secondary');
+            toggleBtn.classList.add('btn-primary');
+        }
+        
+        toggleBtn.style.display = 'inline-block';
+    }
+    
+    toggleBtn.addEventListener('click', async function() {
+        const isSubscribed = await PushNotifications.isSubscribed();
+        
+        toggleBtn.disabled = true;
+        
+        try {
+            if (isSubscribed) {
+                await PushNotifications.unsubscribe();
+            } else {
+                await PushNotifications.subscribe();
+            }
+            await updateStatus();
+        } catch (error) {
+            console.error('Failed to toggle notifications:', error);
+            alert('Failed to toggle notifications. Please try again.');
+        } finally {
+            toggleBtn.disabled = false;
+        }
+    });
+    
+    await updateStatus();
+});
+</script>
 
 <?php
 $content = ob_get_clean();

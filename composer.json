@@ -13,7 +13,8 @@
         "ext-sodium": "*",
         "google/apiclient": "^2.15",
         "vlucas/phpdotenv": "^5.5",
-        "phpmailer/phpmailer": "^6.8"
+        "phpmailer/phpmailer": "^6.8",
+        "minishlink/web-push": "^9.0"
     },
     "autoload": {
         "psr-4": {

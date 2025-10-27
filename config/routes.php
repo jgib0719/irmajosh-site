@@ -200,6 +200,31 @@ return [
     ],
     
     // ========================================================================
+    // Push Notifications (authenticated)
+    // ========================================================================
+    
+    [
+        'method' => 'POST',
+        'path' => '/notifications/subscribe',
+        'handler' => [\App\Controllers\NotificationController::class, 'subscribe'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'DELETE',
+        'path' => '/notifications/unsubscribe',
+        'handler' => [\App\Controllers\NotificationController::class, 'unsubscribe'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'GET',
+        'path' => '/notifications/status',
+        'handler' => [\App\Controllers\NotificationController::class, 'status'],
+        'middleware' => ['authMiddleware']
+    ],
+    
+    // ========================================================================
     // PWA Endpoints
     // ========================================================================
     

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Models\Task;
+use App\Services\NotificationService;
 
 /**
  * TaskController
@@ -92,6 +93,17 @@ class TaskController extends BaseController
         
         try {
             $task = Task::create($taskData);
+            
+            // Send push notification if task is shared
+            if ($isShared) {
+                try {
+                    $notificationService = new NotificationService(db());
+                    $notificationService->notifyTaskCreated($user['id'], $task);
+                } catch (\Exception $e) {
+                    // Log notification failure but don't fail the task creation
+                    logMessage("Failed to send task notification: " . $e->getMessage(), 'WARNING');
+                }
+            }
         } catch (\Exception $e) {
             logMessage("Failed to create task: " . $e->getMessage(), 'ERROR');
             $this->json(['error' => 'Failed to create task'], 500);

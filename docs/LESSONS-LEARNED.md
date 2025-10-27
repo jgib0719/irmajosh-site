@@ -527,4 +527,79 @@
 
 ---
 
-**Last Updated:** October 25, 2025 (Session 2: Calendar & Mobile Fixes)
+### 27. VAPID Key Format Requirements for Web Push
+
+**Problem:** Generated VAPID keys using OpenSSL didn't meet Web Push library requirements for key format and length.
+
+**Specific Issues:**
+- Initially generated keys using `openssl ecparam -genkey -name prime256v1`
+- Public key was 64 bytes when base64-decoded, but Web Push requires exactly 65 bytes
+- Private key was in PEM format (base64-encoded with headers) but library expected raw key
+- NotificationService failed to instantiate with "Public key should be 65 bytes long" error
+- Attempted to base64_decode the private key but library expected it already decoded
+
+**Root Cause:** Using generic OpenSSL commands instead of library-specific key generation. Web Push VAPID keys have specific format requirements that differ from standard EC key formats.
+
+**Impact:** Notification system completely non-functional. Service couldn't initialize to send any notifications.
+
+**Lesson:** Use library-provided key generation functions for specialized protocols. For Web Push, use `Minishlink\WebPush\VAPID::createVapidKeys()` which generates keys in exact format required. Don't try to generate VAPID keys manually with OpenSSL - the format is subtly different from standard EC keys.
+
+---
+
+### 28. Database Migration Duplicate Index on Foreign Key Column
+
+**Problem:** Migration attempted to create index on column that already had index from foreign key constraint.
+
+**Specific Issues:**
+- Migration created `FOREIGN KEY (user_id)` which auto-creates index
+- Then tried to `CREATE INDEX idx_user_id ON push_subscriptions(user_id)`
+- MySQL error: "Duplicate key name 'idx_user_id'"
+- Migration failed, table not created
+
+**Root Cause:** Not understanding that MySQL automatically creates indexes for foreign key columns. Explicitly creating the same index is redundant and causes error.
+
+**Impact:** Migration failure prevented entire notification system from working. Table didn't exist so all operations failed.
+
+**Lesson:** Foreign keys automatically create indexes in MySQL. Never manually create index on same column as foreign key. If you need index on FK column, the FK definition is sufficient. Remove redundant CREATE INDEX statements.
+
+---
+
+### 29. Models Using Instance Methods vs Static Methods Pattern Inconsistency
+
+**Problem:** Existing models used static methods, but new PushSubscription model used instance methods requiring PDO injection.
+
+**Specific Issues:**
+- Task, User, ScheduleRequest models: `Task::create()`, `User::find()` (static)
+- New PushSubscription model: `new PushSubscription($db)` then `->subscribe()` (instance)
+- Controllers inconsistent: some used static calls, others required instantiation
+- NotificationService and NotificationController both needed PDO injection
+- Confusion about which pattern to follow for new code
+
+**Root Cause:** No established pattern documented for model architecture. Mixed approaches in codebase without clear guidance.
+
+**Impact:** Inconsistent API, confusion during implementation, had to refactor controller constructors multiple times to get PDO dependency right.
+
+**Lesson:** Document model architecture pattern in RULES.md. For this codebase: existing models use static methods with internal db() calls, new models can use instance methods if they need to maintain state (like WebPush connection). Controllers should use `db()` helper to get PDO when needed, never store as instance property. When in doubt, follow existing patterns unless there's good reason to deviate.
+
+---
+
+### 30. Service Worker Cache Version Not Updated Blocked Script Changes
+
+**Problem:** Updated push-notifications.js and layout.php but changes weren't visible because service worker served old cached versions.
+
+**Specific Issues:**
+- Added push notification script to layout.php
+- Service worker cache version was `v6` from previous mobile fix session
+- Browser continued serving old layout.php without new script tag
+- Push notification manager never loaded even though file existed
+- Had to manually update cache version to `v7-20251027-push` to force refresh
+
+**Root Cause:** Forgot to increment service worker cache version when adding new features. Service worker cached HTML includes script references.
+
+**Impact:** New push notification feature invisible to users. Had to do manual service worker update mid-implementation.
+
+**Lesson:** This is a repeat of Issues #10 and #16. ALWAYS update service worker CACHE_VERSION when: (1) Adding new scripts to layout.php, (2) Changing any asset paths, (3) Updating CSS/JS files, (4) Modifying HTML structure. Make this part of the feature implementation checklist, not an afterthought. Consider automated cache version based on git commit hash.
+
+---
+
+**Last Updated:** October 27, 2025 (Session 3: Push Notifications Implementation)

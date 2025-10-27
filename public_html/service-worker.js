@@ -3,7 +3,7 @@
  * Implements caching strategies and offline support
  */
 
-const CACHE_VERSION = 'v6-20251027-0659';
+const CACHE_VERSION = 'v7-20251027-push';
 const CACHE_NAME = `irmajosh-${CACHE_VERSION}`;
 
 // Assets to cache immediately on install
@@ -237,6 +237,67 @@ async function fetchAndCache(request) {
         throw error;
     }
 }
+
+/**
+ * Push event - handle incoming push notifications
+ */
+self.addEventListener('push', event => {
+    console.log('[ServiceWorker] Push received');
+    
+    let notificationData = {
+        title: 'IrmaJosh',
+        body: 'You have a new notification',
+        icon: '/assets/icons/icon-192x192.png',
+        badge: '/assets/icons/icon-192x192.png',
+        data: {}
+    };
+    
+    if (event.data) {
+        try {
+            const payload = event.data.json();
+            notificationData = { ...notificationData, ...payload };
+        } catch (e) {
+            console.error('[ServiceWorker] Error parsing push data:', e);
+        }
+    }
+    
+    event.waitUntil(
+        self.registration.showNotification(notificationData.title, {
+            body: notificationData.body,
+            icon: notificationData.icon,
+            badge: notificationData.badge,
+            data: notificationData.data,
+            vibrate: [200, 100, 200],
+            requireInteraction: false
+        })
+    );
+});
+
+/**
+ * Notification click - handle user clicking on notification
+ */
+self.addEventListener('notificationclick', event => {
+    console.log('[ServiceWorker] Notification clicked');
+    event.notification.close();
+    
+    const urlToOpen = event.notification.data?.url || '/dashboard';
+    
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then(clientList => {
+                // Check if there's already a window open
+                for (const client of clientList) {
+                    if (client.url.includes(urlToOpen) && 'focus' in client) {
+                        return client.focus();
+                    }
+                }
+                // No matching window, open a new one
+                if (clients.openWindow) {
+                    return clients.openWindow(urlToOpen);
+                }
+            })
+    );
+});
 
 /**
  * Message event - handle commands from clients

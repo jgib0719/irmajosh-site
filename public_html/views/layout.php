@@ -53,6 +53,17 @@ $locale = getAppLocale();
     <script src="/assets/js/modal.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
     <script src="/assets/js/form-utils.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
     
+    <!-- Push Notifications -->
+    <?php if ($user): ?>
+    <script src="/assets/js/push-notifications.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
+    <script nonce="<?= cspNonce() ?>">
+        // Initialize push notifications for authenticated users
+        if (window.PushNotifications) {
+            PushNotifications.init('<?= env('VAPID_PUBLIC_KEY') ?>');
+        }
+    </script>
+    <?php endif; ?>
+    
     <!-- Application JavaScript -->
     <script src="/assets/js/app.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
     

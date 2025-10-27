@@ -6,6 +6,7 @@ namespace App\Controllers;
 use App\Models\ScheduleRequest;
 use App\Models\ScheduleRequestSlot;
 use App\Services\EmailService;
+use App\Services\NotificationService;
 
 /**
  * ScheduleController
@@ -90,6 +91,15 @@ class ScheduleController extends BaseController
             
             if ($emailSent) {
                 ScheduleRequest::updateStatus($request['id'], 'sent');
+                
+                // Send push notification to user
+                try {
+                    $notificationService = new NotificationService();
+                    $notificationService->notifyScheduleRequest($user['id'], $request);
+                } catch (\Exception $e) {
+                    // Log notification failure but don't fail the request
+                    logMessage("Failed to send schedule request notification: " . $e->getMessage(), 'WARNING');
+                }
                 
                 $this->json([
                     'success' => true,
