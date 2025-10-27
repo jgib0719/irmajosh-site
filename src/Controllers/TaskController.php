@@ -57,12 +57,7 @@ class TaskController extends BaseController
         
         $required = ['title'];
         if (!$this->validateRequired($required, $_POST)) {
-            if ($this->isHtmx()) {
-                $this->json(['error' => 'Missing required fields'], 400);
-            }
-            
-            $this->setFlash('error', 'Missing required fields');
-            $this->redirect('/tasks/shared');
+            $this->json(['error' => 'Missing required fields'], 400);
         }
         
         // Validate and sanitize is_shared input
@@ -99,26 +94,14 @@ class TaskController extends BaseController
             $task = Task::create($taskData);
         } catch (\Exception $e) {
             logMessage("Failed to create task: " . $e->getMessage(), 'ERROR');
-            
-            if ($this->isHtmx()) {
-                $this->json(['error' => 'Failed to create task'], 500);
-            }
-            
-            $this->setFlash('error', 'Failed to create task');
-            $this->redirect('/tasks/shared');
+            $this->json(['error' => 'Failed to create task'], 500);
         }
         
-        if ($this->isHtmx()) {
-            $this->json([
-                'success' => true,
-                'task' => $task,
-                'message' => 'Task created successfully'
-            ]);
-        }
-        
-        $this->setFlash('success', 'Task created successfully');
-        $redirectType = $isShared ? 'shared' : 'private';
-        $this->redirect('/tasks/' . $redirectType);
+        $this->json([
+            'success' => true,
+            'task' => $task,
+            'message' => 'Task created successfully'
+        ]);
     }
     
     /**

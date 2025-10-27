@@ -90,7 +90,7 @@ $csp = "default-src 'self'; " .
        "style-src 'self' 'unsafe-inline'; " .
        "img-src 'self' data:; " .
        "connect-src 'self'; " .
-       "font-src 'self'; " .
+       "font-src 'self' data:; " .
        "media-src 'self'; " .
        "form-action 'self'; " .
        "upgrade-insecure-requests; " .

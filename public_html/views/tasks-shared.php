@@ -11,12 +11,17 @@ ob_start();
 
 <div class="tasks-page">
     <div class="page-header">
-        <h1 class="page-title"><?= t('shared_tasks') ?></h1>
-        <div class="page-actions">
-            <button class="btn btn-primary" id="openAddTaskModal">
-                <span>+</span> Add Task
-            </button>
-        </div>
+        <h1 class="page-title"><?= t('tasks') ?></h1>
+    </div>
+    
+    <!-- Task Tabs -->
+    <div class="tabs">
+        <a href="/tasks/shared" class="tab active">
+            Shared Tasks
+        </a>
+        <a href="/tasks/private" class="tab">
+            My Tasks
+        </a>
     </div>
     
     <div class="tasks-container">
@@ -196,6 +201,7 @@ document.getElementById('addTaskForm').addEventListener('submit', async function
     try {
         const response = await fetch('/tasks', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': data.csrf_token
@@ -236,6 +242,7 @@ document.getElementById('editTaskForm').addEventListener('submit', async functio
     try {
         const response = await fetch(`/tasks/${taskId}`, {
             method: 'PUT',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': data.csrf_token
@@ -282,6 +289,7 @@ async function toggleTaskComplete(taskId, completed) {
     try {
         const response = await fetch(`/tasks/${taskId}`, {
             method: 'PUT',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
@@ -318,6 +326,7 @@ async function deleteTask(taskId) {
     try {
         const response = await fetch(`/tasks/${taskId}`, {
             method: 'DELETE',
+            credentials: 'same-origin',
             headers: {
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
             }

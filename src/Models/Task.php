@@ -200,8 +200,9 @@ class Task
         
         $fields[] = 'updated_at = NOW()';
         $values[] = $id;
+        $values[] = $task['user_id'];
         
-        $sql = 'UPDATE tasks SET ' . implode(', ', $fields) . ' WHERE id = ?';
+        $sql = 'UPDATE tasks SET ' . implode(', ', $fields) . ' WHERE id = ? AND user_id = ?';
         $stmt = db()->prepare($sql);
         
         $result = $stmt->execute($values);
@@ -221,8 +222,8 @@ class Task
             return false;
         }
         
-        $stmt = db()->prepare('DELETE FROM tasks WHERE id = ?');
-        $result = $stmt->execute([$id]);
+        $stmt = db()->prepare('DELETE FROM tasks WHERE id = ? AND user_id = ?');
+        $result = $stmt->execute([$id, $task['user_id']]);
         
         logMessage("Task deleted: ID {$id} by user {$task['user_id']}", 'INFO');
         

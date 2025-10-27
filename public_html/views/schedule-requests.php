@@ -13,7 +13,7 @@ ob_start();
     <div class="page-header">
         <h1 class="page-title"><?= t('schedule_requests') ?></h1>
         <div class="page-actions">
-            <button class="btn btn-primary" onclick="openModal('createRequestModal')">
+            <button class="btn btn-primary" data-open-modal="createRequestModal">
                 <span>+</span> New Request
             </button>
         </div>
@@ -23,7 +23,7 @@ ob_start();
         <?php if (empty($requests)): ?>
             <div class="empty-state">
                 <p>No schedule requests yet</p>
-                <button class="btn btn-primary" onclick="openModal('createRequestModal')">
+                <button class="btn btn-primary" data-open-modal="createRequestModal">
                     Create Your First Request
                 </button>
             </div>
@@ -74,10 +74,10 @@ ob_start();
                         
                         <?php if ($request['status'] === 'pending'): ?>
                             <div class="request-actions">
-                                <button class="btn btn-success" onclick="acceptRequest(<?= $request['id'] ?>)">
+                                <button class="btn btn-success" data-accept-request="<?= $request['id'] ?>">
                                     Accept
                                 </button>
-                                <button class="btn btn-danger" onclick="declineRequest(<?= $request['id'] ?>)">
+                                <button class="btn btn-danger" data-decline-request="<?= $request['id'] ?>">
                                     Decline
                                 </button>
                             </div>
@@ -93,7 +93,7 @@ ob_start();
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">New Schedule Request</h2>
-                <button class="modal-close" onclick="closeModal('createRequestModal')">&times;</button>
+                <button class="modal-close" data-close-modal="createRequestModal">&times;</button>
             </div>
             <form id="createRequestForm" class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
@@ -137,18 +137,18 @@ ob_start();
                     <div id="timeSlots">
                         <div class="time-slot-row">
                             <input type="datetime-local" name="slots[0][start]" required class="form-control">
-                            <button type="button" class="btn-icon" onclick="removeSlot(this)" style="visibility: hidden">
+                            <button type="button" class="btn-icon remove-slot" style="visibility: hidden">
                                 🗑️
                             </button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="addSlot()">
+                    <button type="button" class="btn btn-secondary btn-sm" id="addSlotBtn">
                         + Add Another Slot
                     </button>
                 </div>
                 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('createRequestModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-close-modal="createRequestModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Send Request</button>
                 </div>
             </form>
@@ -159,22 +159,58 @@ ob_start();
 <script nonce="<?= cspNonce() ?>">
 let slotCounter = 1;
 
+// Initialize event listeners on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal open/close buttons
+    document.querySelectorAll('[data-open-modal]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openModal(this.dataset.openModal);
+        });
+    });
+    
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            closeModal(this.dataset.closeModal);
+        });
+    });
+    
+    // Add slot button
+    document.getElementById('addSlotBtn').addEventListener('click', addSlot);
+    
+    // Remove slot buttons (delegated)
+    document.getElementById('timeSlots').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-slot') || e.target.closest('.remove-slot')) {
+            const button = e.target.classList.contains('remove-slot') ? e.target : e.target.closest('.remove-slot');
+            button.parentElement.remove();
+        }
+    });
+    
+    // Accept/decline request buttons
+    document.querySelectorAll('[data-accept-request]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            acceptRequest(parseInt(this.dataset.acceptRequest));
+        });
+    });
+    
+    document.querySelectorAll('[data-decline-request]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            declineRequest(parseInt(this.dataset.declineRequest));
+        });
+    });
+});
+
 function addSlot() {
     const slotsContainer = document.getElementById('timeSlots');
     const newSlot = document.createElement('div');
     newSlot.className = 'time-slot-row';
     newSlot.innerHTML = `
         <input type="datetime-local" name="slots[${slotCounter}][start]" required class="form-control">
-        <button type="button" class="btn-icon" onclick="removeSlot(this)">
+        <button type="button" class="btn-icon remove-slot">
             🗑️
         </button>
     `;
     slotsContainer.appendChild(newSlot);
     slotCounter++;
-}
-
-function removeSlot(button) {
-    button.parentElement.remove();
 }
 
 // Modal functions are now in modal.js (loaded globally)
@@ -204,6 +240,7 @@ document.getElementById('createRequestForm').addEventListener('submit', async fu
     try {
         const response = await fetch('/schedule/send-request', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': data.csrf_token
@@ -222,7 +259,7 @@ document.getElementById('createRequestForm').addEventListener('submit', async fu
             document.getElementById('timeSlots').innerHTML = `
                 <div class="time-slot-row">
                     <input type="datetime-local" name="slots[0][start]" required class="form-control">
-                    <button type="button" class="btn-icon" onclick="removeSlot(this)" style="visibility: hidden">
+                    <button type="button" class="btn-icon remove-slot" style="visibility: hidden">
                         🗑️
                     </button>
                 </div>
@@ -244,6 +281,7 @@ async function acceptRequest(requestId) {
     try {
         const response = await fetch(`/schedule/${requestId}/accept`, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
             }
@@ -270,6 +308,7 @@ async function declineRequest(requestId) {
     try {
         const response = await fetch(`/schedule/${requestId}/decline`, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
             }

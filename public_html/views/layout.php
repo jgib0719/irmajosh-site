@@ -16,7 +16,7 @@ $locale = getAppLocale();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= csrfToken() ?>">
-    <meta name="theme-color" content="#4285f4">
+    <meta name="theme-color" content="#0f172a">
     <meta name="description" content="Personal calendar and task management system">
     
     <title><?= htmlspecialchars($pageTitle ?? env('APP_NAME', 'IrmaJosh')) ?></title>

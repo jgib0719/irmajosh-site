@@ -8,13 +8,13 @@
 ob_start();
 ?>
 
+<!-- FullCalendar CSS -->
+<link rel="stylesheet" href="/assets/css/vendor/fullcalendar.min.css?v=<?= getAssetVersion() ?>">
+
 <div class="calendar-page">
     <div class="page-header">
         <h1 class="page-title"><?= t('calendar') ?></h1>
         <div class="page-actions">
-            <button class="btn btn-secondary" id="syncCalendarBtn">
-                <span>🔄</span> Sync
-            </button>
             <button class="btn btn-primary" id="addEventBtn">
                 <span>+</span> Add Event
             </button>
@@ -30,7 +30,7 @@ ob_start();
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Add Event</h2>
-                <button class="modal-close" onclick="closeModal('addEventModal')">&times;</button>
+                <button class="modal-close" data-close-modal="addEventModal">&times;</button>
             </div>
             <form id="addEventForm" class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
@@ -63,7 +63,7 @@ ob_start();
                 </div>
                 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addEventModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-close-modal="addEventModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Event</button>
                 </div>
             </form>
@@ -72,7 +72,7 @@ ob_start();
 </div>
 
 <!-- FullCalendar JS -->
-<script src="/assets/vendor/fullcalendar/index.global.min.js"></script>
+<script src="/assets/js/vendor/fullcalendar.min.js?v=<?= getAssetVersion() ?>"></script>
 
 <script nonce="<?= cspNonce() ?>">
 document.addEventListener('DOMContentLoaded', function() {
@@ -106,6 +106,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     calendar.render();
     
+    // Modal close button event listeners
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            closeModal(this.dataset.closeModal);
+        });
+    });
+    
     // Add event button
     document.getElementById('addEventBtn').addEventListener('click', function() {
         const now = new Date();
@@ -115,27 +122,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('eventStart').value = now.toISOString().slice(0, 16);
         document.getElementById('eventEnd').value = oneHourLater.toISOString().slice(0, 16);
         openModal('addEventModal');
-    });
-    
-    // Sync calendar button
-    document.getElementById('syncCalendarBtn').addEventListener('click', async function() {
-        try {
-            const response = await fetch('/calendar/sync', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-                }
-            });
-            
-            if (response.ok) {
-                calendar.refetchEvents();
-                showAlert('Calendar synced successfully', 'success');
-            } else {
-                showAlert('Failed to sync calendar', 'error');
-            }
-        } catch (error) {
-            showAlert('Failed to sync calendar', 'error');
-        }
     });
     
     // Add event form submission
@@ -148,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch('/calendar/events', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': data.csrf_token

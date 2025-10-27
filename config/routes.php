@@ -8,7 +8,7 @@
 
 return [
     // Global middleware applied to all routes
-    '_middleware' => [],
+    '_middleware' => ['parseJsonBodyMiddleware'],
     
     // ========================================================================
     // Public Routes

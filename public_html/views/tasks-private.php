@@ -11,12 +11,17 @@ ob_start();
 
 <div class="tasks-page">
     <div class="page-header">
-        <h1 class="page-title"><?= t('private_tasks') ?></h1>
-        <div class="page-actions">
-            <button class="btn btn-primary" onclick="openModal('addTaskModal')">
-                <span>+</span> Add Task
-            </button>
-        </div>
+        <h1 class="page-title"><?= t('tasks') ?></h1>
+    </div>
+    
+    <!-- Task Tabs -->
+    <div class="tabs">
+        <a href="/tasks/shared" class="tab">
+            Shared Tasks
+        </a>
+        <a href="/tasks/private" class="tab active">
+            My Tasks
+        </a>
     </div>
     
     <div class="tasks-container">
@@ -151,6 +156,7 @@ document.getElementById('addTaskForm').addEventListener('submit', async function
     
     try {
         const response = await fetch('/tasks', {
+            credentials: 'same-origin',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -185,6 +191,7 @@ document.getElementById('editTaskForm').addEventListener('submit', async functio
     
     try {
         const response = await fetch(`/tasks/${taskId}`, {
+            credentials: 'same-origin',
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -229,6 +236,7 @@ function editTask(task) {
 async function toggleTaskComplete(taskId, completed) {
     try {
         const response = await fetch(`/tasks/${taskId}`, {
+            credentials: 'same-origin',
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -265,6 +273,7 @@ async function deleteTask(taskId) {
     
     try {
         const response = await fetch(`/tasks/${taskId}`, {
+            credentials: 'same-origin',
             method: 'DELETE',
             headers: {
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content

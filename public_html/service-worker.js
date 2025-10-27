@@ -3,7 +3,7 @@
  * Implements caching strategies and offline support
  */
 
-const CACHE_VERSION = 'v4-20251025-1200';
+const CACHE_VERSION = 'v6-20251027-0659';
 const CACHE_NAME = `irmajosh-${CACHE_VERSION}`;
 
 // Assets to cache immediately on install
@@ -20,14 +20,14 @@ const PRECACHE_ASSETS = [
 const NETWORK_ONLY_ROUTES = [
     '/auth/',
     '/api/',
-    '/csp-report'
+    '/csp-report',
+    '/tasks'  // Task operations must always be fresh
 ];
 
 // Routes that should try network first, then cache (no overlap with network-only)
 const NETWORK_FIRST_ROUTES = [
     '/dashboard',
     '/calendar',
-    '/tasks',
     '/schedule',
     '/health'
 ];

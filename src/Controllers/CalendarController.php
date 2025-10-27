@@ -26,29 +26,30 @@ class CalendarController extends BaseController
     }
     
     /**
-     * Get events (API endpoint - stubbed, no external calendar integration)
+     * Get events (API endpoint - returns empty array, no external calendar integration)
      */
     public function getEvents(): void
     {
         $this->requireAuth();
         
-        $this->json([
-            'error' => 'Calendar integration disabled',
-            'message' => 'Google Calendar integration has been removed'
-        ], 501);
+        // Return empty events array since Google Calendar integration was removed
+        // In the future, this could return events from a local database table
+        $this->json([]);
     }
     
     /**
-     * Create event - stubbed
+     * Create event - stubbed (returns success but doesn't persist)
      */
     public function createEvent(): void
     {
         $this->requireAuth();
         
+        // Accept the request but don't persist anywhere
+        // In the future, could save to local database table
         $this->json([
-            'error' => 'Calendar integration disabled',
-            'message' => 'Google Calendar integration has been removed'
-        ], 501);
+            'success' => true,
+            'message' => 'Event creation not yet implemented'
+        ]);
     }
     
     /**
@@ -78,15 +79,16 @@ class CalendarController extends BaseController
     }
     
     /**
-     * Sync calendar - stubbed
+     * Sync calendar - stubbed (returns success but does nothing)
      */
     public function sync(): void
     {
         $this->requireAuth();
         
+        // Accept the request but don't sync anything
         $this->json([
-            'error' => 'Calendar integration disabled',
-            'message' => 'Google Calendar integration has been removed'
-        ], 501);
+            'success' => true,
+            'message' => 'Calendar sync not yet implemented'
+        ]);
     }
 }

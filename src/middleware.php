@@ -108,6 +108,26 @@ function rateLimitMiddleware(): void
 }
 
 /**
+ * Parse JSON request body middleware
+ * Populates $_POST with JSON data when Content-Type is application/json
+ */
+function parseJsonBodyMiddleware(): void
+{
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    
+    if (strpos($contentType, 'application/json') !== false) {
+        $body = file_get_contents('php://input');
+        
+        if ($body) {
+            $data = json_decode($body, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                $_POST = array_merge($_POST, $data);
+            }
+        }
+    }
+}
+
+/**
  * Guest middleware - redirect authenticated users away from auth pages
  */
 function guestMiddleware(): void
