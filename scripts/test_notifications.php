@@ -27,7 +27,7 @@ try {
     $pushModel = new PushSubscription($db);
     
     // Check if user has subscriptions
-    $subscriptions = $pushModel->getSubscriptionsByUser($userId);
+    $subscriptions = $pushModel->getUserSubscriptions($userId);
     
     if (empty($subscriptions)) {
         echo "❌ User $userId has no push subscriptions.\n";
@@ -43,18 +43,23 @@ try {
     // Send test notification
     echo "📤 Sending test notification...\n";
     
-    $success = $notificationService->sendToUser($userId, [
-        'title' => 'Test Notification',
-        'body' => 'This is a test push notification from IrmaJosh!',
-        'icon' => '/assets/icons/icon-192x192.png',
-        'url' => '/dashboard'
-    ]);
+    $results = $notificationService->sendToUser(
+        $userId,
+        'Test Notification',
+        'This is a test push notification from IrmaJosh!',
+        [
+            'url' => '/dashboard'
+        ]
+    );
     
-    if ($success) {
+    echo "✅ Sent: {$results['sent']}, Failed: {$results['failed']}\n";
+    
+    if ($results['sent'] > 0) {
         echo "✅ Test notification sent successfully!\n";
-        echo "   Check your mobile device for the notification.\n";
+        echo "   Check your device/browser for the notification.\n";
     } else {
-        echo "⚠️  Notification may have failed. Check logs for details.\n";
+        echo "⚠️  No notifications were sent. Check logs for details.\n";
+        echo "   Log file: storage/logs/app.log\n";
     }
     
 } catch (Exception $e) {

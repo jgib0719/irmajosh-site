@@ -8,9 +8,12 @@
  * @param {string} modalId - The ID of the modal to open
  */
 window.openModal = function(modalId) {
+    console.log('openModal called with ID:', modalId);
     const modal = document.getElementById(modalId);
+    console.log('Modal element:', modal);
     if (modal) {
         modal.classList.add('active');
+        console.log('Modal opened successfully');
         
         // Focus first input
         setTimeout(() => {

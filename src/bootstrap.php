@@ -55,7 +55,7 @@ ini_set('session.cookie_secure', '1'); // HTTPS only
 ini_set('session.cookie_samesite', 'Lax'); // Lax allows OAuth redirects
 ini_set('session.use_strict_mode', '1');
 session_name('__Host-irmajosh_session'); // __Host- prefix (must use session_name, not ini_set)
-ini_set('session.gc_maxlifetime', '28800'); // 8 hours
+ini_set('session.gc_maxlifetime', '2592000'); // 30 days
 ini_set('session.sid_length', '48');
 ini_set('session.sid_bits_per_character', '6');
 

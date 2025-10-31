@@ -44,15 +44,6 @@ ob_start();
                         
                         <div class="request-details">
                             <div class="request-detail">
-                                <strong>From:</strong> <?= htmlspecialchars($request['requester_name']) ?>
-                            </div>
-                            <div class="request-detail">
-                                <strong>Email:</strong> <?= htmlspecialchars($request['requester_email']) ?>
-                            </div>
-                            <div class="request-detail">
-                                <strong>Duration:</strong> <?= $request['duration_minutes'] ?> minutes
-                            </div>
-                            <div class="request-detail">
                                 <strong>Created:</strong> <?= date('M j, Y g:i A', strtotime($request['created_at'])) ?>
                             </div>
                         </div>
@@ -111,32 +102,11 @@ ob_start();
                 </div>
                 
                 <div class="form-group">
-                    <label for="requesterName">Your Name *</label>
-                    <input type="text" id="requesterName" name="requester_name" required class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="requesterEmail">Your Email *</label>
-                    <input type="email" id="requesterEmail" name="requester_email" required class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="duration">Duration (minutes) *</label>
-                    <select id="duration" name="duration_minutes" required class="form-control">
-                        <option value="15">15 minutes</option>
-                        <option value="30" selected>30 minutes</option>
-                        <option value="45">45 minutes</option>
-                        <option value="60">1 hour</option>
-                        <option value="90">1.5 hours</option>
-                        <option value="120">2 hours</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Proposed Time Slots *</label>
+                    <label>Proposed Time Slots (Optional)</label>
+                    <p class="form-help-text">You can add time slots now or leave blank and set them later when accepting the request.</p>
                     <div id="timeSlots">
                         <div class="time-slot-row">
-                            <input type="datetime-local" name="slots[0][start]" required class="form-control">
+                            <input type="datetime-local" name="slots[0][start]" class="form-control">
                             <button type="button" class="btn-icon remove-slot" style="visibility: hidden">
                                 🗑️
                             </button>
@@ -204,7 +174,7 @@ function addSlot() {
     const newSlot = document.createElement('div');
     newSlot.className = 'time-slot-row';
     newSlot.innerHTML = `
-        <input type="datetime-local" name="slots[${slotCounter}][start]" required class="form-control">
+        <input type="datetime-local" name="slots[${slotCounter}][start]" class="form-control">
         <button type="button" class="btn-icon remove-slot">
             🗑️
         </button>
@@ -223,13 +193,10 @@ document.getElementById('createRequestForm').addEventListener('submit', async fu
         csrf_token: formData.get('csrf_token'),
         title: formData.get('title'),
         description: formData.get('description'),
-        requester_name: formData.get('requester_name'),
-        requester_email: formData.get('requester_email'),
-        duration_minutes: parseInt(formData.get('duration_minutes')),
         slots: []
     };
     
-    // Collect all time slots
+    // Collect all time slots (optional)
     const slotInputs = document.querySelectorAll('#timeSlots input[type="datetime-local"]');
     slotInputs.forEach(input => {
         if (input.value) {
@@ -258,7 +225,7 @@ document.getElementById('createRequestForm').addEventListener('submit', async fu
             // Reset to single slot
             document.getElementById('timeSlots').innerHTML = `
                 <div class="time-slot-row">
-                    <input type="datetime-local" name="slots[0][start]" required class="form-control">
+                    <input type="datetime-local" name="slots[0][start]" class="form-control">
                     <button type="button" class="btn-icon remove-slot" style="visibility: hidden">
                         🗑️
                     </button>

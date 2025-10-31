@@ -25,12 +25,12 @@ class AuthController extends BaseController
     public function index(): void
     {
         // Redirect to dashboard if already authenticated
-        if (isAuthenticated()) {
+        if (\isAuthenticated()) {
             $this->redirect('/dashboard');
         }
         
         $this->view('landing', [
-            'pageTitle' => t('welcome') . ' - ' . env('APP_NAME')
+            'pageTitle' => \t('welcome') . ' - ' . \env('APP_NAME')
         ]);
     }
     
@@ -43,7 +43,7 @@ class AuthController extends BaseController
             $authUrl = $this->authService->initiateLogin();
             $this->redirect($authUrl);
         } catch (\Exception $e) {
-            logMessage('Login initiation failed: ' . $e->getMessage(), 'ERROR');
+            \logMessage('Login initiation failed: ' . $e->getMessage(), 'ERROR');
             $this->setFlash('error', 'Failed to initiate login. Please try again.');
             $this->redirect('/');
         }
@@ -59,8 +59,8 @@ class AuthController extends BaseController
             $error = $_GET['error'];
             $errorDescription = $_GET['error_description'] ?? 'Unknown error';
             
-            logMessage("OAuth error: {$error} - {$errorDescription}", 'WARNING');
-            $this->setFlash('error', 'Authentication failed: ' . htmlspecialchars($errorDescription));
+            \logMessage("OAuth error: {$error} - {$errorDescription}", 'WARNING');
+            $this->setFlash('error', 'Authentication failed: ' . $errorDescription);
             $this->redirect('/');
         }
         
@@ -68,8 +68,8 @@ class AuthController extends BaseController
         $code = $_GET['code'] ?? null;
         $state = $_GET['state'] ?? null;
         
-        if (!$code || !$state) {
-            logMessage('OAuth callback missing code or state', 'WARNING');
+        if (!isset($_GET['code'], $_GET['state'])) {
+            \logMessage('OAuth callback missing code or state', 'WARNING');
             $this->setFlash('error', 'Invalid authentication response');
             $this->redirect('/');
         }
@@ -85,7 +85,7 @@ class AuthController extends BaseController
             $this->setFlash('success', 'Welcome back, ' . htmlspecialchars($user['name']) . '!');
             $this->redirect('/dashboard');
         } catch (\Exception $e) {
-            logMessage('OAuth callback failed: ' . $e->getMessage(), 'ERROR');
+            \logMessage('OAuth callback failed: ' . $e->getMessage(), 'ERROR');
             
             // Check if it's an authorization error
             if (strpos($e->getMessage(), 'not authorized') !== false) {
@@ -108,7 +108,7 @@ class AuthController extends BaseController
         if ($userId) {
             $this->authService->logout($userId);
         } else {
-            logout();
+            \logout();
         }
         
         $this->setFlash('success', 'You have been logged out');

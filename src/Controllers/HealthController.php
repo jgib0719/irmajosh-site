@@ -18,7 +18,7 @@ class HealthController extends BaseController
         $this->json([
             'status' => 'ok',
             'timestamp' => date('c'),
-            'version' => getAssetVersion()
+            'version' => \getAssetVersion()
         ]);
     }
     
@@ -31,7 +31,7 @@ class HealthController extends BaseController
         
         // Database check
         try {
-            db()->query('SELECT 1');
+            \db()->query('SELECT 1');
             $checks['database'] = ['status' => 'ok'];
         } catch (\Exception $e) {
             $checks['database'] = ['status' => 'error', 'message' => 'Database connection failed'];
@@ -63,7 +63,7 @@ class HealthController extends BaseController
         
         $envOk = true;
         foreach ($requiredEnvVars as $var) {
-            if (empty(env($var))) {
+            if (empty(\env($var))) {
                 $envOk = false;
                 break;
             }
@@ -85,7 +85,7 @@ class HealthController extends BaseController
             'checks' => $checks,
             'timestamp' => date('c'),
             'php_version' => PHP_VERSION,
-            'app_version' => getAssetVersion()
+            'app_version' => \getAssetVersion()
         ]);
     }
 }

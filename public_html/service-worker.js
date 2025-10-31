@@ -3,7 +3,7 @@
  * Implements caching strategies and offline support
  */
 
-const CACHE_VERSION = 'v7-20251027-push';
+const CACHE_VERSION = 'v11-20251031-tasks-improvements';
 const CACHE_NAME = `irmajosh-${CACHE_VERSION}`;
 
 // Assets to cache immediately on install

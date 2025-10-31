@@ -19,7 +19,7 @@ foreach ($alertTypes as $type) {
                 <?php if ($type === 'info'): ?>ℹ<?php endif; ?>
             </span>
             <span class="alert-message"><?= htmlspecialchars($message) ?></span>
-            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            <button class="alert-close" data-dismiss="alert">&times;</button>
         </div>
         <?php
     }

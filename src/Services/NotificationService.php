@@ -21,9 +21,9 @@ class NotificationService
         // Initialize Web Push with VAPID keys
         $this->webPush = new WebPush([
             'VAPID' => [
-                'subject' => env('VAPID_SUBJECT', 'mailto:admin@irmajosh.com'),
-                'publicKey' => env('VAPID_PUBLIC_KEY'),
-                'privateKey' => env('VAPID_PRIVATE_KEY')
+                'subject' => \env('VAPID_SUBJECT', 'mailto:admin@irmajosh.com'),
+                'publicKey' => \env('VAPID_PUBLIC_KEY'),
+                'privateKey' => \env('VAPID_PRIVATE_KEY')
             ]
         ]);
     }
@@ -62,7 +62,7 @@ class NotificationService
                 $this->webPush->queueNotification($subscription, $payload);
             } catch (\Exception $e) {
                 $results['failed']++;
-                logError("Failed to queue notification: " . $e->getMessage());
+                \logError("Failed to queue notification: " . $e->getMessage());
             }
         }
         

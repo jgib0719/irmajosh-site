@@ -22,9 +22,18 @@ ob_start();
         <a href="/tasks/private" class="tab">
             My Tasks
         </a>
+        <button class="tab-add-btn" id="openAddTaskModal">
+            + Add Task
+        </button>
     </div>
     
     <div class="tasks-container">
+        <?php 
+        // Separate active and completed tasks
+        $activeTasks = array_filter($tasks, fn($task) => $task['status'] !== 'completed');
+        $completedTasks = array_filter($tasks, fn($task) => $task['status'] === 'completed');
+        ?>
+        
         <?php if (empty($tasks)): ?>
             <div class="empty-state">
                 <p><?= t('no_tasks_yet') ?></p>
@@ -33,40 +42,80 @@ ob_start();
                 </button>
             </div>
         <?php else: ?>
-            <div class="tasks-list" id="sharedTasksList">
-                <?php foreach ($tasks as $task): ?>
-                    <div class="task-item <?= $task['status'] === 'completed' ? 'completed' : '' ?>" data-task-id="<?= $task['id'] ?>">
-                        <div class="task-checkbox">
-                            <input type="checkbox" 
-                                   id="task-<?= $task['id'] ?>" 
-                                   class="task-complete-checkbox"
-                                   data-task-id="<?= $task['id'] ?>"
-                                   <?= $task['status'] === 'completed' ? 'checked' : '' ?>>
+            <!-- Active Tasks -->
+            <?php if (empty($activeTasks)): ?>
+                <div class="empty-state">
+                    <p>No active shared tasks</p>
+                </div>
+            <?php else: ?>
+                <div class="tasks-list" id="sharedTasksList">
+                    <?php foreach ($activeTasks as $task): ?>
+                        <div class="task-item" data-task-id="<?= $task['id'] ?>">
+                            <div class="task-checkbox">
+                                <input type="checkbox" 
+                                       id="task-<?= $task['id'] ?>" 
+                                       class="task-complete-checkbox"
+                                       data-task-id="<?= $task['id'] ?>">
+                            </div>
+                            <div class="task-content">
+                                <label for="task-<?= $task['id'] ?>" class="task-title">
+                                    <?= htmlspecialchars($task['title']) ?>
+                                </label>
+                                <?php if (!empty($task['description'])): ?>
+                                    <p class="task-description"><?= nl2br(htmlspecialchars($task['description'])) ?></p>
+                                <?php endif; ?>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn-icon task-edit-btn" data-task='<?= htmlspecialchars(json_encode($task)) ?>' title="Edit">
+                                    ✏️
+                                </button>
+                                <button class="btn-icon task-delete-btn" data-task-id="<?= $task['id'] ?>" title="Delete">
+                                    🗑️
+                                </button>
+                            </div>
                         </div>
-                        <div class="task-content">
-                            <label for="task-<?= $task['id'] ?>" class="task-title">
-                                <?= htmlspecialchars($task['title']) ?>
-                            </label>
-                            <?php if (!empty($task['description'])): ?>
-                                <p class="task-description"><?= nl2br(htmlspecialchars($task['description'])) ?></p>
-                            <?php endif; ?>
-                            <?php if ($task['due_date']): ?>
-                                <span class="task-due-date <?= strtotime($task['due_date']) < time() && $task['status'] !== 'completed' ? 'overdue' : '' ?>">
-                                    Due: <?= date('M j, Y g:i A', strtotime($task['due_date'])) ?>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="task-actions">
-                            <button class="btn-icon task-edit-btn" data-task='<?= htmlspecialchars(json_encode($task)) ?>' title="Edit">
-                                ✏️
-                            </button>
-                            <button class="btn-icon task-delete-btn" data-task-id="<?= $task['id'] ?>" title="Delete">
-                                🗑️
-                            </button>
-                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Completed Tasks Section -->
+            <?php if (!empty($completedTasks)): ?>
+                <div class="completed-tasks-section">
+                    <div class="completed-tasks-header" onclick="toggleCompletedTasks()">
+                        <h3>Completed Tasks (<?= count($completedTasks) ?>)</h3>
+                        <span class="completed-tasks-toggle" id="completedToggle">▼</span>
                     </div>
-                <?php endforeach; ?>
-            </div>
+                    <div class="completed-tasks-list" id="completedTasksList">
+                        <?php foreach ($completedTasks as $task): ?>
+                            <div class="task-item completed" data-task-id="<?= $task['id'] ?>">
+                                <div class="task-checkbox">
+                                    <input type="checkbox" 
+                                           id="task-<?= $task['id'] ?>" 
+                                           class="task-complete-checkbox"
+                                           data-task-id="<?= $task['id'] ?>"
+                                           checked>
+                                </div>
+                                <div class="task-content">
+                                    <label for="task-<?= $task['id'] ?>" class="task-title">
+                                        <?= htmlspecialchars($task['title']) ?>
+                                    </label>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?= nl2br(htmlspecialchars($task['description'])) ?></p>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="task-actions">
+                                    <button class="btn-icon task-edit-btn" data-task='<?= htmlspecialchars(json_encode($task)) ?>' title="Edit">
+                                        ✏️
+                                    </button>
+                                    <button class="btn-icon task-delete-btn" data-task-id="<?= $task['id'] ?>" title="Delete">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     
@@ -89,11 +138,6 @@ ob_start();
                 <div class="form-group">
                     <label for="taskDescription">Description</label>
                     <textarea id="taskDescription" name="description" class="form-control" rows="3"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="taskDueDate">Due Date</label>
-                    <input type="datetime-local" id="taskDueDate" name="due_date" class="form-control">
                 </div>
                 
                 <div class="modal-footer">
@@ -127,11 +171,6 @@ ob_start();
                 </div>
                 
                 <div class="form-group">
-                    <label for="editTaskDueDate">Due Date</label>
-                    <input type="datetime-local" id="editTaskDueDate" name="due_date" class="form-control">
-                </div>
-                
-                <div class="form-group">
                     <label>
                         <input type="checkbox" id="editTaskCompleted" name="completed">
                         Mark as completed
@@ -148,6 +187,17 @@ ob_start();
 </div>
 
 <script nonce="<?= cspNonce() ?>">
+// Toggle completed tasks section
+function toggleCompletedTasks() {
+    const list = document.getElementById('completedTasksList');
+    const toggle = document.getElementById('completedToggle');
+    
+    if (list && toggle) {
+        list.classList.toggle('collapsed');
+        toggle.classList.toggle('collapsed');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Open add task modal buttons
     const openAddTaskBtns = [
@@ -271,13 +321,6 @@ function editTask(task) {
     document.getElementById('editTaskTitle').value = task.title;
     document.getElementById('editTaskDescription').value = task.description || '';
     
-    if (task.due_date) {
-        const dueDate = new Date(task.due_date);
-        document.getElementById('editTaskDueDate').value = dueDate.toISOString().slice(0, 16);
-    } else {
-        document.getElementById('editTaskDueDate').value = '';
-    }
-    
     document.getElementById('editTaskCompleted').checked = task.status === 'completed';
     
     openModal('editTaskModal');
@@ -298,12 +341,8 @@ async function toggleTaskComplete(taskId, completed) {
         });
         
         if (response.ok) {
-            const taskEl = document.querySelector(`[data-task-id="${taskId}"]`);
-            if (completed) {
-                taskEl.classList.add('completed');
-            } else {
-                taskEl.classList.remove('completed');
-            }
+            // Reload page to move task to appropriate section
+            window.location.reload();
         } else {
             showAlert('Failed to update task', 'error');
             // Revert checkbox

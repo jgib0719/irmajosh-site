@@ -372,8 +372,9 @@ fetch('/api/endpoint', {
 
 ### Service Worker
 - File: `/public_html/service-worker.js`
+- Served via PWAController with no-cache headers (always fresh)
 - Cache version: Update on EVERY deployment
-- Format: `v7-20251027-push` (version-date-feature)
+- Format: `v8-20251027-remove-quickadd` (version-date-feature)
 
 ---
 
@@ -454,7 +455,10 @@ fetch('/api/endpoint', {
 ### 4. Code Changes Not Visible
 ```bash
 # Service worker cache - increment version in service-worker.js
-const CACHE_VERSION = 'v8-20251027-1430';
+const CACHE_VERSION = 'v8-20251027-remove-quickadd';
+
+# Service worker served with no-cache headers via PWAController
+# Browser checks for updates automatically every 24 hours
 
 # PHP OPcache - reload PHP-FPM
 sudo systemctl reload php8.4-fpm

@@ -129,6 +129,13 @@ return [
     ],
     
     [
+        'method' => 'GET',
+        'path' => '/tasks/{id}',
+        'handler' => [\App\Controllers\TaskController::class, 'get'],
+        'middleware' => ['authMiddleware']
+    ],
+    
+    [
         'method' => 'POST',
         'path' => '/tasks',
         'handler' => [\App\Controllers\TaskController::class, 'create'],
@@ -178,6 +185,27 @@ return [
         'method' => 'PUT',
         'path' => '/schedule/{id}/status',
         'handler' => [\App\Controllers\ScheduleController::class, 'updateStatus'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'POST',
+        'path' => '/schedule/{id}/accept',
+        'handler' => [\App\Controllers\ScheduleController::class, 'acceptRequest'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'POST',
+        'path' => '/schedule/{id}/decline',
+        'handler' => [\App\Controllers\ScheduleController::class, 'declineRequest'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'POST',
+        'path' => '/schedule/{id}/schedule',
+        'handler' => [\App\Controllers\ScheduleController::class, 'scheduleToCalendar'],
         'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     

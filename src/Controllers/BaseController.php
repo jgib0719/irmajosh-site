@@ -91,6 +91,24 @@ abstract class BaseController
     }
     
     /**
+     * Get JSON input from request body
+     */
+    protected function getJsonInput(): array
+    {
+        $json = file_get_contents('php://input');
+        if (empty($json)) {
+            return [];
+        }
+        
+        $data = json_decode($json, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return [];
+        }
+        
+        return $data ?? [];
+    }
+    
+    /**
      * Validate required fields
      */
     protected function validateRequired(array $fields, array $data): bool

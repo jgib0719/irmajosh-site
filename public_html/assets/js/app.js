@@ -8,6 +8,16 @@
     
     // ========== HTMX Configuration ==========
     document.addEventListener('DOMContentLoaded', function() {
+        // Alert dismiss buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('[data-dismiss="alert"]')) {
+                const alert = e.target.closest('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }
+        });
+        
         // Configure HTMX to send CSRF token with every request
         document.body.addEventListener('htmx:configRequest', function(event) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]');

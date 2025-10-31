@@ -408,22 +408,22 @@
 
 ---
 
-### 23. Quick Add Implementation Without Unified UX Pattern
+### 23. Quick Add Feature Removed - Feature Creep
 
-**Problem:** Users had to navigate to different pages to add tasks vs calendar events, with no unified "add" experience.
+**Problem:** Quick Add feature added unnecessary complexity without clear user benefit over existing page-specific actions.
 
 **Specific Issues:**
-- Task pages had "Add Task" button (removed during refactor)
-- Calendar had "Add Event" button in page content
-- Schedule requests had its own form
-- No keyboard shortcut for quick entry
-- No context-aware routing based on input
+- Global Quick Add button in navigation added screen clutter
+- Modal duplicated functionality already available on task/calendar pages
+- Ctrl+K keyboard shortcut conflicted with browser search shortcuts
+- Smart routing logic added complexity for minimal UX improvement
+- Feature required significant code: button, modal HTML, JavaScript, CSS, keyboard handler
 
-**Root Cause:** Feature added piecemeal without considering unified UX pattern for creating items.
+**Root Cause:** Added feature without validating actual user need. Over-engineering simple task/event creation.
 
-**Impact:** Confusing user experience, reduced discoverability of add functionality.
+**Impact:** Removed October 27, 2025. Simplified navigation, removed ~200 lines of code across header.php, style.css, service worker.
 
-**Lesson:** For multi-entity applications, implement unified Quick Add system with: (1) Global button in navigation accessible from all pages, (2) Single modal with smart routing based on input (datetime present = calendar event, no datetime = task), (3) Keyboard shortcut (Ctrl+K) for power users, (4) One source of truth for add functionality instead of scattered per-page buttons.
+**Lesson:** Don't implement "nice to have" features without validating user need. Page-specific "Add Task" and "Add Event" buttons are sufficient and more discoverable. Global actions should solve real pain points, not just seem convenient. Prefer simplicity over feature completeness when user benefit is unclear.
 
 ---
 

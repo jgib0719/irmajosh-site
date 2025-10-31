@@ -22,50 +22,100 @@ ob_start();
         <a href="/tasks/private" class="tab active">
             My Tasks
         </a>
+        <button class="tab-add-btn" id="openAddTaskModal">
+            + Add Task
+        </button>
     </div>
     
     <div class="tasks-container">
+        <?php 
+        // Separate active and completed tasks
+        $activeTasks = array_filter($tasks, fn($task) => $task['status'] !== 'completed');
+        $completedTasks = array_filter($tasks, fn($task) => $task['status'] === 'completed');
+        ?>
+        
         <?php if (empty($tasks)): ?>
             <div class="empty-state">
                 <p><?= t('no_tasks_yet') ?></p>
-                <button class="btn btn-primary" onclick="openModal('addTaskModal')">
+                <button class="btn btn-primary" id="createFirstTaskBtn">
                     Create Your First Task
                 </button>
             </div>
         <?php else: ?>
-            <div class="tasks-list" id="privateTasksList">
-                <?php foreach ($tasks as $task): ?>
-                    <div class="task-item <?= $task['completed'] ? 'completed' : '' ?>" data-task-id="<?= $task['id'] ?>">
-                        <div class="task-checkbox">
-                            <input type="checkbox" 
-                                   id="task-<?= $task['id'] ?>" 
-                                   <?= $task['completed'] ? 'checked' : '' ?>
-                                   onchange="toggleTaskComplete(<?= $task['id'] ?>, this.checked)">
+            <!-- Active Tasks -->
+            <?php if (empty($activeTasks)): ?>
+                <div class="empty-state">
+                    <p>No active tasks</p>
+                </div>
+            <?php else: ?>
+                <div class="tasks-list" id="privateTasksList">
+                    <?php foreach ($activeTasks as $task): ?>
+                        <div class="task-item" data-task-id="<?= $task['id'] ?>">
+                            <div class="task-checkbox">
+                                <input type="checkbox" 
+                                       id="task-<?= $task['id'] ?>" 
+                                       data-task-id="<?= $task['id'] ?>"
+                                       class="task-complete-checkbox">
+                            </div>
+                            <div class="task-content">
+                                <label for="task-<?= $task['id'] ?>" class="task-title">
+                                    <?= htmlspecialchars($task['title']) ?>
+                                </label>
+                                <?php if (!empty($task['description'])): ?>
+                                    <p class="task-description"><?= nl2br(htmlspecialchars($task['description'])) ?></p>
+                                <?php endif; ?>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn-icon edit-task-btn" data-task='<?= htmlspecialchars(json_encode($task)) ?>' title="Edit">
+                                    ✏️
+                                </button>
+                                <button class="btn-icon delete-task-btn" data-task-id="<?= $task['id'] ?>" title="Delete">
+                                    🗑️
+                                </button>
+                            </div>
                         </div>
-                        <div class="task-content">
-                            <label for="task-<?= $task['id'] ?>" class="task-title">
-                                <?= htmlspecialchars($task['title']) ?>
-                            </label>
-                            <?php if (!empty($task['description'])): ?>
-                                <p class="task-description"><?= nl2br(htmlspecialchars($task['description'])) ?></p>
-                            <?php endif; ?>
-                            <?php if ($task['due_date']): ?>
-                                <span class="task-due-date <?= strtotime($task['due_date']) < time() && !$task['completed'] ? 'overdue' : '' ?>">
-                                    Due: <?= date('M j, Y g:i A', strtotime($task['due_date'])) ?>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="task-actions">
-                            <button class="btn-icon" onclick="editTask(<?= htmlspecialchars(json_encode($task)) ?>)" title="Edit">
-                                ✏️
-                            </button>
-                            <button class="btn-icon" onclick="deleteTask(<?= $task['id'] ?>)" title="Delete">
-                                🗑️
-                            </button>
-                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Completed Tasks Section -->
+            <?php if (!empty($completedTasks)): ?>
+                <div class="completed-tasks-section">
+                    <div class="completed-tasks-header" onclick="toggleCompletedTasks()">
+                        <h3>Completed Tasks (<?= count($completedTasks) ?>)</h3>
+                        <span class="completed-tasks-toggle" id="completedToggle">▼</span>
                     </div>
-                <?php endforeach; ?>
-            </div>
+                    <div class="completed-tasks-list" id="completedTasksList">
+                        <?php foreach ($completedTasks as $task): ?>
+                            <div class="task-item completed" data-task-id="<?= $task['id'] ?>">
+                                <div class="task-checkbox">
+                                    <input type="checkbox" 
+                                           id="task-<?= $task['id'] ?>" 
+                                           data-task-id="<?= $task['id'] ?>"
+                                           class="task-complete-checkbox"
+                                           checked>
+                                </div>
+                                <div class="task-content">
+                                    <label for="task-<?= $task['id'] ?>" class="task-title">
+                                        <?= htmlspecialchars($task['title']) ?>
+                                    </label>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?= nl2br(htmlspecialchars($task['description'])) ?></p>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="task-actions">
+                                    <button class="btn-icon edit-task-btn" data-task='<?= htmlspecialchars(json_encode($task)) ?>' title="Edit">
+                                        ✏️
+                                    </button>
+                                    <button class="btn-icon delete-task-btn" data-task-id="<?= $task['id'] ?>" title="Delete">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     
@@ -74,7 +124,7 @@ ob_start();
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Add Private Task</h2>
-                <button class="modal-close" onclick="closeModal('addTaskModal')">&times;</button>
+                <button class="modal-close" data-modal="addTaskModal">&times;</button>
             </div>
             <form id="addTaskForm" class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
@@ -90,13 +140,8 @@ ob_start();
                     <textarea id="taskDescription" name="description" class="form-control" rows="3"></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label for="taskDueDate">Due Date</label>
-                    <input type="datetime-local" id="taskDueDate" name="due_date" class="form-control">
-                </div>
-                
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addTaskModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-modal="addTaskModal" data-action="close">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Task</button>
                 </div>
             </form>
@@ -108,7 +153,7 @@ ob_start();
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Edit Task</h2>
-                <button class="modal-close" onclick="closeModal('editTaskModal')">&times;</button>
+                <button class="modal-close" data-modal="editTaskModal">&times;</button>
             </div>
             <form id="editTaskForm" class="modal-body">
                 <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
@@ -126,11 +171,6 @@ ob_start();
                 </div>
                 
                 <div class="form-group">
-                    <label for="editTaskDueDate">Due Date</label>
-                    <input type="datetime-local" id="editTaskDueDate" name="due_date" class="form-control">
-                </div>
-                
-                <div class="form-group">
                     <label>
                         <input type="checkbox" id="editTaskCompleted" name="completed">
                         Mark as completed
@@ -138,7 +178,7 @@ ob_start();
                 </div>
                 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editTaskModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-modal="editTaskModal" data-action="close">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Task</button>
                 </div>
             </form>
@@ -147,6 +187,66 @@ ob_start();
 </div>
 
 <script nonce="<?= cspNonce() ?>">
+// Toggle completed tasks section
+function toggleCompletedTasks() {
+    const list = document.getElementById('completedTasksList');
+    const toggle = document.getElementById('completedToggle');
+    
+    if (list && toggle) {
+        list.classList.toggle('collapsed');
+        toggle.classList.toggle('collapsed');
+    }
+}
+
+// DOM event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Add task buttons
+    const openAddTaskBtn = document.getElementById('openAddTaskModal');
+    const createFirstTaskBtn = document.getElementById('createFirstTaskBtn');
+    
+    if (openAddTaskBtn) {
+        openAddTaskBtn.addEventListener('click', () => openModal('addTaskModal'));
+    }
+    
+    if (createFirstTaskBtn) {
+        createFirstTaskBtn.addEventListener('click', () => openModal('addTaskModal'));
+    }
+    
+    // Task completion checkboxes
+    document.querySelectorAll('.task-complete-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const taskId = parseInt(this.dataset.taskId);
+            toggleTaskComplete(taskId, this.checked);
+        });
+    });
+    
+    // Edit task buttons
+    document.querySelectorAll('.edit-task-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const taskData = JSON.parse(this.dataset.task);
+            editTask(taskData);
+        });
+    });
+    
+    // Delete task buttons
+    document.querySelectorAll('.delete-task-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const taskId = parseInt(this.dataset.taskId);
+            deleteTask(taskId);
+        });
+    });
+    
+    // Modal close buttons
+    document.querySelectorAll('.modal-close, [data-action="close"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modalId = this.dataset.modal;
+            if (modalId) {
+                closeModal(modalId);
+            }
+        });
+    });
+});
+
 // Add task form submission
 document.getElementById('addTaskForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -221,19 +321,14 @@ function editTask(task) {
     document.getElementById('editTaskTitle').value = task.title;
     document.getElementById('editTaskDescription').value = task.description || '';
     
-    if (task.due_date) {
-        const dueDate = new Date(task.due_date);
-        document.getElementById('editTaskDueDate').value = dueDate.toISOString().slice(0, 16);
-    } else {
-        document.getElementById('editTaskDueDate').value = '';
-    }
-    
     document.getElementById('editTaskCompleted').checked = task.completed;
     
     openModal('editTaskModal');
 }
 
 async function toggleTaskComplete(taskId, completed) {
+    const status = completed ? 'completed' : 'pending';
+    
     try {
         const response = await fetch(`/tasks/${taskId}`, {
             credentials: 'same-origin',
@@ -242,16 +337,12 @@ async function toggleTaskComplete(taskId, completed) {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify({ completed })
+            body: JSON.stringify({ status })
         });
         
         if (response.ok) {
-            const taskEl = document.querySelector(`[data-task-id="${taskId}"]`);
-            if (completed) {
-                taskEl.classList.add('completed');
-            } else {
-                taskEl.classList.remove('completed');
-            }
+            // Reload page to move task to appropriate section
+            window.location.reload();
         } else {
             showAlert('Failed to update task', 'error');
             // Revert checkbox

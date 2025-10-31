@@ -6,6 +6,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\UserToken;
 use App\Models\AuditLog;
+use App\Services\GoogleClientFactory;
 use Google_Client;
 
 /**
@@ -46,8 +47,8 @@ class AuthService
         
         // Build authorization URL
         $params = http_build_query([
-            'client_id' => env('GOOGLE_CLIENT_ID'),
-            'redirect_uri' => env('APP_URL') . '/auth/callback',
+            'client_id' => \env('GOOGLE_CLIENT_ID'),
+            'redirect_uri' => \env('APP_URL') . '/auth/callback',
             'response_type' => 'code',
             'scope' => implode(' ', $this->clientFactory->getRequiredScopes()),
             'state' => $_SESSION['oauth_state'],
@@ -57,7 +58,7 @@ class AuthService
             'prompt' => 'consent',
         ]);
         
-        AuditLog::logAuth('login_initiated', 'OAuth login initiated from ' . getClientIp());
+        AuditLog::logAuth('login_initiated', 'OAuth login initiated from ' . \getClientIp());
         
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . $params;
     }
@@ -69,18 +70,18 @@ class AuthService
     {
         if (!isset($_SESSION['oauth_state']) || 
             !isset($_SESSION['oauth_state_expiry'])) {
-            logMessage('OAuth state not found in session', 'WARNING');
+            \logMessage('OAuth state not found in session', 'WARNING');
             return false;
         }
         
         if (time() > $_SESSION['oauth_state_expiry']) {
-            logMessage('OAuth state expired', 'WARNING');
+            \logMessage('OAuth state expired', 'WARNING');
             return false;
         }
         
         if (!hash_equals($_SESSION['oauth_state'], $state)) {
-            logMessage('OAuth state mismatch', 'WARNING');
-            AuditLog::logSecurity('state_mismatch', 'OAuth state parameter mismatch from ' . getClientIp());
+            \logMessage('OAuth state mismatch', 'WARNING');
+            AuditLog::logSecurity('state_mismatch', 'OAuth state parameter mismatch from ' . \getClientIp());
             return false;
         }
         
@@ -94,12 +95,12 @@ class AuthService
     {
         if (!isset($_SESSION['oauth_code_verifier']) ||
             !isset($_SESSION['oauth_code_verifier_expiry'])) {
-            logMessage('OAuth code verifier not found in session', 'WARNING');
+            \logMessage('OAuth code verifier not found in session', 'WARNING');
             return null;
         }
         
         if (time() > $_SESSION['oauth_code_verifier_expiry']) {
-            logMessage('OAuth code verifier expired', 'WARNING');
+            \logMessage('OAuth code verifier expired', 'WARNING');
             return null;
         }
         
@@ -124,9 +125,9 @@ class AuthService
         $tokenUrl = 'https://oauth2.googleapis.com/token';
         $data = [
             'code' => $code,
-            'client_id' => env('GOOGLE_CLIENT_ID'),
-            'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-            'redirect_uri' => env('APP_URL') . '/auth/callback',
+            'client_id' => \env('GOOGLE_CLIENT_ID'),
+            'client_secret' => \env('GOOGLE_CLIENT_SECRET'),
+            'redirect_uri' => \env('APP_URL') . '/auth/callback',
             'grant_type' => 'authorization_code',
             'code_verifier' => $codeVerifier,
         ];
@@ -142,14 +143,14 @@ class AuthService
         curl_close($ch);
         
         if ($httpCode !== 200) {
-            logMessage("Token exchange failed: HTTP {$httpCode} - {$response}", 'ERROR');
+            \logMessage("Token exchange failed: HTTP {$httpCode} - {$response}", 'ERROR');
             throw new \Exception('Failed to exchange authorization code for tokens');
         }
         
         $tokens = json_decode($response, true);
         
         if (!isset($tokens['access_token']) || !isset($tokens['id_token'])) {
-            logMessage('Token exchange response missing required tokens', 'ERROR');
+            \logMessage('Token exchange response missing required tokens', 'ERROR');
             throw new \Exception('Invalid token response from Google');
         }
         
@@ -173,7 +174,7 @@ class AuthService
             }
             
             // Verify audience (client ID)
-            if ($payload['aud'] !== env('GOOGLE_CLIENT_ID')) {
+            if ($payload['aud'] !== \env('GOOGLE_CLIENT_ID')) {
                 throw new \Exception('ID token audience mismatch');
             }
             
@@ -188,7 +189,7 @@ class AuthService
                 throw new \Exception('ID token expired');
             }
             
-            AuditLog::logAuth('id_token_verified', 'ID token verified for ' . redactPII($payload['email']));
+            AuditLog::logAuth('id_token_verified', 'ID token verified for ' . \redactPII($payload['email']));
             
             return [
                 'sub' => $payload['sub'],
@@ -198,7 +199,7 @@ class AuthService
                 'email_verified' => $payload['email_verified'] ?? false
             ];
         } catch (\Exception $e) {
-            logMessage('ID token verification failed: ' . $e->getMessage(), 'ERROR');
+            \logMessage('ID token verification failed: ' . $e->getMessage(), 'ERROR');
             AuditLog::logSecurity('id_token_failed', 'ID token verification failed: ' . $e->getMessage());
             throw $e;
         }
@@ -210,10 +211,10 @@ class AuthService
      */
     public function isEmailAllowed(string $email): bool
     {
-        $allowlistStr = env('EMAIL_ALLOWLIST', '');
+        $allowlistStr = \env('EMAIL_ALLOWLIST', '');
         
         if (empty($allowlistStr)) {
-            logMessage('EMAIL_ALLOWLIST is empty - no access allowed', 'WARNING');
+            \logMessage('EMAIL_ALLOWLIST is empty - no access allowed', 'WARNING');
             return false;
         }
         
@@ -226,7 +227,7 @@ class AuthService
             }
         }
         
-        AuditLog::logSecurity('unauthorized_email', 'Unauthorized email attempted login: ' . redactPII($email));
+        AuditLog::logSecurity('unauthorized_email', 'Unauthorized email attempted login: ' . \redactPII($email));
         
         return false;
     }
@@ -253,7 +254,7 @@ class AuthService
         
         // 4. Check email allowlist
         if (!$this->isEmailAllowed($userInfo['email'])) {
-            AuditLog::logSecurity('access_denied', 'Access denied for email: ' . redactPII($userInfo['email']));
+            AuditLog::logSecurity('access_denied', 'Access denied for email: ' . \redactPII($userInfo['email']));
             throw new \Exception('Your email is not authorized to access this application');
         }
         
@@ -269,7 +270,7 @@ class AuthService
         // 8. Create audit log
         AuditLog::logAuth('login_success', 'User logged in successfully', $user['id']);
         
-        logMessage('User authenticated: ' . redactPII($userInfo['email']) . ' (ID: ' . $user['id'] . ')', 'INFO');
+        \logMessage('User authenticated: ' . \redactPII($userInfo['email']) . ' (ID: ' . $user['id'] . ')', 'INFO');
         
         return $user;
     }
@@ -287,11 +288,11 @@ class AuthService
             try {
                 $client->revokeToken();
             } catch (\Exception $e) {
-                logMessage("Failed to revoke Google token for user {$userId}: " . $e->getMessage(), 'WARNING');
+                \logMessage("Failed to revoke Google token for user {$userId}: " . $e->getMessage(), 'WARNING');
             }
         }
         
         // Clear session
-        logout();
+        \logout();
     }
 }

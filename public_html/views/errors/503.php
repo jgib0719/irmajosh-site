@@ -61,7 +61,13 @@
         <h1>503</h1>
         <h2><?= t('database_error') ?></h2>
         <p>We're experiencing database connectivity issues. Please try again in a few moments.</p>
-        <a href="/" onclick="location.reload(); return false;">Try Again</a>
+        <a href="#" id="tryAgain">Try Again</a>
     </div>
+    <script>
+        document.getElementById('tryAgain').addEventListener('click', function(e) {
+            e.preventDefault();
+            location.reload();
+        });
+    </script>
 </body>
 </html>

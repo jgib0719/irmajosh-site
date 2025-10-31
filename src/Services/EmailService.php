@@ -22,15 +22,34 @@ class EmailService
         
         // Server settings
         $mail->isSMTP();
-        $mail->Host = env('MAIL_HOST');
-        $mail->SMTPAuth = true;
-        $mail->Username = env('MAIL_USERNAME');
-        $mail->Password = env('MAIL_PASSWORD');
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = env('MAIL_PORT', 587);
+        $mail->Host = \env('SMTP_HOST') ?: \env('MAIL_HOST');
+        
+        // SMTP Auth (only if username/password provided)
+        $username = \env('SMTP_USER') ?: \env('MAIL_USERNAME');
+        $password = \env('SMTP_PASS') ?: \env('MAIL_PASSWORD');
+        
+        if (!empty($username) && !empty($password)) {
+            $mail->SMTPAuth = true;
+            $mail->Username = $username;
+            $mail->Password = $password;
+        } else {
+            $mail->SMTPAuth = false;
+        }
+        
+        // Encryption
+        $encryption = \env('SMTP_ENCRYPTION');
+        if ($encryption === 'tls') {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        } elseif ($encryption === 'ssl') {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        }
+        
+        $mail->Port = (int)(\env('SMTP_PORT') ?: \env('MAIL_PORT', 587));
         
         // Default from address
-        $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', env('APP_NAME')));
+        $fromAddress = \env('SMTP_FROM_EMAIL') ?: \env('MAIL_FROM_ADDRESS');
+        $fromName = \env('SMTP_FROM_NAME') ?: \env('MAIL_FROM_NAME', \env('APP_NAME'));
+        $mail->setFrom($fromAddress, $fromName);
         
         // Character set
         $mail->CharSet = 'UTF-8';
@@ -110,11 +129,12 @@ class EmailService
             
             $mail->send();
             
-            logMessage('Email sent to ' . redactPII($data['to']), 'INFO');
+            $toLog = is_array($data['to']) ? implode(', ', $data['to']) : $data['to'];
+            \logMessage('Email sent to ' . \redactPII($toLog), 'INFO');
             
             return true;
         } catch (Exception $e) {
-            logMessage('Email send failed: ' . $e->getMessage(), 'ERROR');
+            \logMessage('Email send failed: ' . $e->getMessage(), 'ERROR');
             return false;
         }
     }
@@ -155,6 +175,20 @@ class EmailService
     }
     
     /**
+     * Get admin email addresses from EMAIL_ALLOWLIST
+     */
+    private function getAdminEmails(): array
+    {
+        $allowlist = \env('EMAIL_ALLOWLIST', '');
+        if (empty($allowlist)) {
+            return [];
+        }
+        
+        $emails = array_map('trim', explode(',', $allowlist));
+        return array_filter($emails, fn($email) => !empty($email));
+    }
+    
+    /**
      * Send notification email
      */
     public function sendNotification(string $recipientEmail, string $subject, string $message): bool
@@ -166,7 +200,7 @@ class EmailService
                     ' . nl2br(htmlspecialchars($message)) . '
                 </div>
                 <p style="color: #666; font-size: 12px; margin-top: 20px;">
-                    This is an automated message from ' . htmlspecialchars(env('APP_NAME')) . '.
+                    This is an automated message from ' . htmlspecialchars(\env('APP_NAME')) . '.
                 </p>
             </div>
         ';
@@ -183,19 +217,54 @@ class EmailService
     }
     
     /**
+     * Send notification email to admins
+     */
+    public function sendAdminNotification(string $subject, string $message): bool
+    {
+        $adminEmails = $this->getAdminEmails();
+        
+        if (empty($adminEmails)) {
+            \logMessage('No admin emails configured for notification', 'WARNING');
+            return false;
+        }
+        
+        $body = '
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>' . htmlspecialchars($subject) . '</h2>
+                <div style="padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
+                    ' . nl2br(htmlspecialchars($message)) . '
+                </div>
+                <p style="color: #666; font-size: 12px; margin-top: 20px;">
+                    This is an automated admin notification from ' . htmlspecialchars(\env('APP_NAME')) . '.
+                </p>
+            </div>
+        ';
+        
+        $altBody = strip_tags($message);
+        
+        return $this->send([
+            'to' => $adminEmails,
+            'subject' => '[Admin] ' . $subject,
+            'body' => $body,
+            'alt_body' => $altBody,
+            'is_html' => true,
+        ]);
+    }
+    
+    /**
      * Send welcome email
      */
     public function sendWelcomeEmail(string $recipientEmail, string $name): bool
     {
-        $subject = 'Welcome to ' . env('APP_NAME');
+        $subject = 'Welcome to ' . \env('APP_NAME');
         
         $body = '
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2>Welcome, ' . htmlspecialchars($name) . '!</h2>
-                <p>Thank you for joining ' . htmlspecialchars(env('APP_NAME')) . '.</p>
+                <p>Thank you for joining ' . htmlspecialchars(\env('APP_NAME')) . '.</p>
                 <p>You can now access your personal calendar and task management system.</p>
                 <p style="margin-top: 30px;">
-                    <a href="' . env('APP_URL') . '/dashboard" 
+                    <a href="' . \env('APP_URL') . '/dashboard" 
                        style="background-color: #4285f4; color: white; padding: 10px 20px; 
                               text-decoration: none; border-radius: 5px; display: inline-block;">
                         Go to Dashboard
@@ -203,15 +272,15 @@ class EmailService
                 </p>
                 <p style="color: #666; font-size: 12px; margin-top: 40px;">
                     If you have any questions, please contact us at ' . 
-                    htmlspecialchars(env('MAIL_FROM_ADDRESS')) . '
+                    htmlspecialchars(\env('MAIL_FROM_ADDRESS')) . '
                 </p>
             </div>
         ';
         
-        $altBody = "Welcome, {$name}!\n\n" .
-                   "Thank you for joining " . env('APP_NAME') . ".\n" .
-                   "You can now access your personal calendar and task management system.\n\n" .
-                   "Visit: " . env('APP_URL') . "/dashboard";
+        $altBody = "Welcome, {$name}!\nn" .
+                   "Thank you for joining " . \env('APP_NAME') . ".\n" .
+                   "You can now access your personal calendar and task management system.\nn" .
+                   "Visit: " . \env('APP_URL') . "/dashboard";
         
         return $this->send([
             'to' => $recipientEmail,
@@ -227,9 +296,11 @@ class EmailService
      */
     public function isConfigured(): bool
     {
-        return !empty(env('MAIL_HOST')) && 
-               !empty(env('MAIL_USERNAME')) && 
-               !empty(env('MAIL_PASSWORD'));
+        $host = \env('SMTP_HOST') ?: \env('MAIL_HOST');
+        
+        // Email is configured if we have a host
+        // Username/password not required for localhost or trusted relays
+        return !empty($host);
     }
     
     /**

@@ -135,9 +135,9 @@ class User
             $stmt = db()->prepare('DELETE FROM tasks WHERE user_id = ?');
             $stmt->execute([$userId]);
             
-            // Delete schedule requests
-            $stmt = db()->prepare('DELETE FROM schedule_requests WHERE user_id = ?');
-            $stmt->execute([$userId]);
+            // Delete schedule requests (where user is sender or recipient)
+            $stmt = db()->prepare('DELETE FROM schedule_requests WHERE sender_id = ? OR recipient_id = ?');
+            $stmt->execute([$userId, $userId]);
             
             // Delete user
             $stmt = db()->prepare('DELETE FROM users WHERE id = ?');

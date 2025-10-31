@@ -270,6 +270,30 @@ function logMessage(string $message, string $level = 'INFO'): void
 }
 
 /**
+ * Log error level message
+ */
+function logError(string $message): void
+{
+    logMessage($message, 'ERROR');
+}
+
+/**
+ * Log warning level message
+ */
+function logWarning(string $message): void
+{
+    logMessage($message, 'WARNING');
+}
+
+/**
+ * Log info level message
+ */
+function logInfo(string $message): void
+{
+    logMessage($message, 'INFO');
+}
+
+/**
  * Redact PII from messages
  */
 function redactPII(string $message): string
@@ -356,11 +380,11 @@ function getAssetVersion(): string
     if ($version === null) {
         // Try git commit hash first
         $gitHash = @shell_exec('git rev-parse --short HEAD 2>/dev/null');
-        if ($gitHash) {
-            $version = trim($gitHash);
+        if ($gitHash && trim($gitHash)) {
+            $version = (string)trim($gitHash);
         } else {
             // Fall back to deploy timestamp or default
-            $version = env('DEPLOY_TIMESTAMP', 'v1');
+            $version = (string)env('DEPLOY_TIMESTAMP', 'v1');
         }
     }
     

@@ -51,6 +51,7 @@ $locale = getAppLocale();
     
     <!-- Utility JavaScript -->
     <script src="/assets/js/modal.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
+    <script src="/assets/js/alerts.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
     <script src="/assets/js/form-utils.js?v=<?= getAssetVersion() ?>" nonce="<?= cspNonce() ?>"></script>
     
     <!-- Push Notifications -->

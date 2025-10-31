@@ -92,9 +92,10 @@
 
 ## Service Worker & Caching
 
-- **Update CACHE_VERSION on every deployment** - Use timestamp format like `v4-20251025-0646`
+- **Update CACHE_VERSION on every deployment** - Use timestamp format like `v8-20251027-remove-quickadd`
+- **Service worker served with no-cache headers** - PWAController ensures browser always checks for updates
 - **Update cache version when adding scripts to layout** - New script tags in cached HTML require version bump
-- **Hard refresh required after service worker changes** - Document this for users/testers
+- **Hard refresh forces immediate service worker update** - Otherwise browser checks every 24 hours
 - **Precache paths must match actual files** - Verify all paths exist before deployment
 - **Consider cache strategy per asset type** - Static assets can cache longer than HTML
 - **Test in incognito mode to verify updates** - Bypasses service worker cache

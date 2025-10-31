@@ -19,21 +19,17 @@ class ScheduleRequestSlot
     {
         $stmt = db()->prepare('
             INSERT INTO schedule_request_slots (
-                schedule_request_id,
-                start_time,
-                end_time,
-                is_selected,
-                created_at,
-                updated_at
+                request_id,
+                start_at,
+                end_at
             )
-            VALUES (?, ?, ?, ?, NOW(), NOW())
+            VALUES (?, ?, ?)
         ');
         
         $stmt->execute([
-            $data['schedule_request_id'],
-            $data['start_time'],
-            $data['end_time'],
-            $data['is_selected'] ?? 0
+            $data['request_id'],
+            $data['start_at'] ?? $data['start_time'] ?? null,
+            $data['end_at'] ?? $data['end_time'] ?? null
         ]);
         
         $slotId = db()->lastInsertId();
@@ -60,8 +56,8 @@ class ScheduleRequestSlot
     {
         $stmt = db()->prepare('
             SELECT * FROM schedule_request_slots 
-            WHERE schedule_request_id = ? 
-            ORDER BY start_time ASC
+            WHERE request_id = ? 
+            ORDER BY start_at ASC
         ');
         $stmt->execute([$requestId]);
         
@@ -69,13 +65,14 @@ class ScheduleRequestSlot
     }
     
     /**
-     * Get selected slot for a schedule request
+     * Get first slot for a schedule request (since is_selected doesn't exist)
      */
     public static function getSelectedSlot(int $requestId): ?array
     {
         $stmt = db()->prepare('
             SELECT * FROM schedule_request_slots 
-            WHERE schedule_request_id = ? AND is_selected = 1 
+            WHERE request_id = ? 
+            ORDER BY start_at ASC
             LIMIT 1
         ');
         $stmt->execute([$requestId]);
@@ -85,36 +82,22 @@ class ScheduleRequestSlot
     }
     
     /**
-     * Mark a slot as selected (and unselect others)
+     * Mark a slot as selected (store in schedule_requests.accepted_slot_id)
      */
     public static function selectSlot(int $slotId, int $requestId): bool
     {
         try {
-            db()->beginTransaction();
-            
-            // Unselect all slots for this request
             $stmt = db()->prepare('
-                UPDATE schedule_request_slots 
-                SET is_selected = 0, updated_at = NOW() 
-                WHERE schedule_request_id = ?
-            ');
-            $stmt->execute([$requestId]);
-            
-            // Select the specified slot
-            $stmt = db()->prepare('
-                UPDATE schedule_request_slots 
-                SET is_selected = 1, updated_at = NOW() 
-                WHERE id = ? AND schedule_request_id = ?
+                UPDATE schedule_requests 
+                SET accepted_slot_id = ? 
+                WHERE id = ?
             ');
             $stmt->execute([$slotId, $requestId]);
-            
-            db()->commit();
             
             logMessage("Slot {$slotId} selected for request {$requestId}", 'INFO');
             
             return true;
         } catch (\Exception $e) {
-            db()->rollBack();
             logMessage("Failed to select slot {$slotId}: " . $e->getMessage(), 'ERROR');
             return false;
         }
@@ -128,26 +111,20 @@ class ScheduleRequestSlot
         $fields = [];
         $values = [];
         
-        if (isset($data['start_time'])) {
-            $fields[] = 'start_time = ?';
-            $values[] = $data['start_time'];
+        if (isset($data['start_at']) || isset($data['start_time'])) {
+            $fields[] = 'start_at = ?';
+            $values[] = $data['start_at'] ?? $data['start_time'];
         }
         
-        if (isset($data['end_time'])) {
-            $fields[] = 'end_time = ?';
-            $values[] = $data['end_time'];
-        }
-        
-        if (isset($data['is_selected'])) {
-            $fields[] = 'is_selected = ?';
-            $values[] = $data['is_selected'];
+        if (isset($data['end_at']) || isset($data['end_time'])) {
+            $fields[] = 'end_at = ?';
+            $values[] = $data['end_at'] ?? $data['end_time'];
         }
         
         if (empty($fields)) {
             return false;
         }
         
-        $fields[] = 'updated_at = NOW()';
         $values[] = $id;
         
         $sql = 'UPDATE schedule_request_slots SET ' . implode(', ', $fields) . ' WHERE id = ?';
@@ -170,7 +147,7 @@ class ScheduleRequestSlot
      */
     public static function deleteByRequest(int $requestId): bool
     {
-        $stmt = db()->prepare('DELETE FROM schedule_request_slots WHERE schedule_request_id = ?');
+        $stmt = db()->prepare('DELETE FROM schedule_request_slots WHERE request_id = ?');
         return $stmt->execute([$requestId]);
     }
     
@@ -184,10 +161,9 @@ class ScheduleRequestSlot
             
             foreach ($slots as $slot) {
                 self::create([
-                    'schedule_request_id' => $requestId,
-                    'start_time' => $slot['start_time'],
-                    'end_time' => $slot['end_time'],
-                    'is_selected' => $slot['is_selected'] ?? 0
+                    'request_id' => $requestId,
+                    'start_at' => $slot['start'] ?? $slot['start_time'] ?? $slot['start_at'] ?? null,
+                    'end_at' => $slot['end'] ?? $slot['end_time'] ?? $slot['end_at'] ?? null
                 ]);
             }
             

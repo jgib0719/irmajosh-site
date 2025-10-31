@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\AuditLog;
+use App\ModelsAuditLog;
 
 /**
  * SecurityController
@@ -29,7 +29,7 @@ class SecurityController extends BaseController
             $report = json_decode($body, true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
-                logMessage('Invalid CSP report JSON: ' . json_last_error_msg(), 'WARNING');
+                \logMessage('Invalid CSP report JSON: ' . json_last_error_msg(), 'WARNING');
                 http_response_code(400);
                 exit;
             }
@@ -53,14 +53,14 @@ class SecurityController extends BaseController
                 $violation['violated_directive']
             );
             
-            logMessage($message, 'WARNING');
+            \logMessage($message, 'WARNING');
             
             // Store in audit log
             AuditLog::logSecurity('csp_violation', $message);
             
             http_response_code(204);
         } catch (\Exception $e) {
-            logMessage('Error processing CSP report: ' . $e->getMessage(), 'ERROR');
+            \logMessage('Error processing CSP report: ' . $e->getMessage(), 'ERROR');
             http_response_code(500);
         }
         

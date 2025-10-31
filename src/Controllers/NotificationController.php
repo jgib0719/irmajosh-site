@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Controllers;
 
@@ -10,7 +11,7 @@ class NotificationController extends BaseController
     
     public function __construct()
     {
-        $this->pushSubscription = new PushSubscription(db());
+        $this->pushSubscription = new PushSubscription(\db());
     }
     
     /**
@@ -19,37 +20,37 @@ class NotificationController extends BaseController
      */
     public function subscribe(): void
     {
-        if (!isAuthenticated()) {
-            json(['error' => 'Unauthorized'], 401);
+        if (!\isAuthenticated()) {
+            \json(['error' => 'Unauthorized'], 401);
         }
         
         $data = json_decode(file_get_contents('php://input'), true);
         
         if (!isset($data['subscription'])) {
-            json(['error' => 'Missing subscription data'], 400);
+            \json(['error' => 'Missing subscription data'], 400);
         }
         
         $subscription = $data['subscription'];
         
         if (!isset($subscription['endpoint'], $subscription['keys']['p256dh'], $subscription['keys']['auth'])) {
-            json(['error' => 'Invalid subscription format'], 400);
+            \json(['error' => 'Invalid subscription format'], 400);
         }
         
-        $userId = currentUser()['id'];
+        $userId = \currentUser()['id'];
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         
         try {
             $this->pushSubscription->subscribe($userId, $subscription, $userAgent);
             
-            logInfo("User $userId subscribed to push notifications");
+            \logInfo("User $userId subscribed to push notifications");
             
-            json([
+            \json([
                 'success' => true,
                 'message' => 'Successfully subscribed to notifications'
             ]);
         } catch (\Exception $e) {
-            logError("Failed to save push subscription: " . $e->getMessage());
-            json(['error' => 'Failed to save subscription'], 500);
+            \logError("Failed to save push subscription: " . $e->getMessage());
+            \json(['error' => 'Failed to save subscription'], 500);
         }
     }
     
@@ -59,30 +60,30 @@ class NotificationController extends BaseController
      */
     public function unsubscribe(): void
     {
-        if (!isAuthenticated()) {
-            json(['error' => 'Unauthorized'], 401);
+        if (!\isAuthenticated()) {
+            \json(['error' => 'Unauthorized'], 401);
         }
         
         $data = json_decode(file_get_contents('php://input'), true);
         
         if (!isset($data['endpoint'])) {
-            json(['error' => 'Missing endpoint'], 400);
+            \json(['error' => 'Missing endpoint'], 400);
         }
         
-        $userId = currentUser()['id'];
+        $userId = \currentUser()['id'];
         
         try {
             $this->pushSubscription->unsubscribe($userId, $data['endpoint']);
             
-            logInfo("User $userId unsubscribed from push notifications");
+            \logInfo("User $userId unsubscribed from push notifications");
             
-            json([
+            \json([
                 'success' => true,
                 'message' => 'Successfully unsubscribed'
             ]);
         } catch (\Exception $e) {
-            logError("Failed to remove push subscription: " . $e->getMessage());
-            json(['error' => 'Failed to unsubscribe'], 500);
+            \logError("Failed to remove push subscription: " . $e->getMessage());
+            \json(['error' => 'Failed to unsubscribe'], 500);
         }
     }
     
@@ -92,14 +93,14 @@ class NotificationController extends BaseController
      */
     public function status(): void
     {
-        if (!isAuthenticated()) {
-            json(['error' => 'Unauthorized'], 401);
+        if (!\isAuthenticated()) {
+            \json(['error' => 'Unauthorized'], 401);
         }
         
-        $userId = currentUser()['id'];
+        $userId = \currentUser()['id'];
         $count = $this->pushSubscription->getSubscriptionCount($userId);
         
-        json([
+        \json([
             'subscribed' => $count > 0,
             'subscription_count' => $count
         ]);

@@ -19,10 +19,10 @@ class ScheduleRequest
     {
         $stmt = db()->prepare('
             INSERT INTO schedule_requests (
-                user_id,
-                recipient_email,
-                subject,
-                message,
+                sender_id,
+                recipient_id,
+                title,
+                description,
                 status,
                 created_at,
                 updated_at
@@ -31,16 +31,16 @@ class ScheduleRequest
         ');
         
         $stmt->execute([
-            $data['user_id'],
-            $data['recipient_email'],
-            $data['subject'],
-            $data['message'] ?? null,
+            $data['sender_id'],
+            $data['recipient_id'],
+            $data['title'],
+            $data['description'] ?? null,
             $data['status'] ?? 'pending'
         ]);
         
         $requestId = db()->lastInsertId();
         
-        logMessage("Schedule request created: ID {$requestId} to " . redactPII($data['recipient_email']), 'INFO');
+        logMessage("Schedule request created: ID {$requestId}", 'INFO');
         
         return self::find((int)$requestId);
     }
@@ -73,16 +73,39 @@ class ScheduleRequest
     }
     
     /**
+     * Get actionable schedule requests (not yet scheduled to calendar)
+     * Excludes:
+     * - Declined requests
+     * - Requests with accepted_slot_id set (scheduled via slot workflow)
+     * - Requests linked to calendar_events (scheduled via direct calendar workflow)
+     */
+    public static function getActionable(int $userId): array
+    {
+        $stmt = db()->prepare('
+            SELECT sr.* FROM schedule_requests sr
+            LEFT JOIN calendar_events ce ON sr.id = ce.schedule_request_id
+            WHERE (sr.sender_id = ? OR sr.recipient_id = ?)
+            AND sr.status != ?
+            AND sr.accepted_slot_id IS NULL
+            AND ce.id IS NULL
+            ORDER BY sr.created_at DESC
+        ');
+        $stmt->execute([$userId, $userId, 'declined']);
+        
+        return $stmt->fetchAll();
+    }
+    
+    /**
      * Get schedule requests by status
      */
     public static function getByStatus(int $userId, string $status): array
     {
         $stmt = db()->prepare('
             SELECT * FROM schedule_requests 
-            WHERE user_id = ? AND status = ? 
+            WHERE (sender_id = ? OR recipient_id = ?) AND status = ? 
             ORDER BY created_at DESC
         ');
-        $stmt->execute([$userId, $status]);
+        $stmt->execute([$userId, $userId, $status]);
         
         return $stmt->fetchAll();
     }
@@ -113,24 +136,24 @@ class ScheduleRequest
         $fields = [];
         $values = [];
         
-        if (isset($data['recipient_email'])) {
-            $fields[] = 'recipient_email = ?';
-            $values[] = $data['recipient_email'];
+        if (isset($data['title'])) {
+            $fields[] = 'title = ?';
+            $values[] = $data['title'];
         }
         
-        if (isset($data['subject'])) {
-            $fields[] = 'subject = ?';
-            $values[] = $data['subject'];
-        }
-        
-        if (isset($data['message'])) {
-            $fields[] = 'message = ?';
-            $values[] = $data['message'];
+        if (isset($data['description'])) {
+            $fields[] = 'description = ?';
+            $values[] = $data['description'];
         }
         
         if (isset($data['status'])) {
             $fields[] = 'status = ?';
             $values[] = $data['status'];
+        }
+        
+        if (isset($data['accepted_slot_id'])) {
+            $fields[] = 'accepted_slot_id = ?';
+            $values[] = $data['accepted_slot_id'];
         }
         
         if (empty($fields)) {
@@ -174,16 +197,16 @@ class ScheduleRequest
     }
     
     /**
-     * Check if user owns the schedule request
+     * Check if user owns the schedule request (sender or recipient)
      */
     public static function userOwns(int $requestId, int $userId): bool
     {
         $stmt = db()->prepare('
             SELECT COUNT(*) as count 
             FROM schedule_requests 
-            WHERE id = ? AND user_id = ?
+            WHERE id = ? AND (sender_id = ? OR recipient_id = ?)
         ');
-        $stmt->execute([$requestId, $userId]);
+        $stmt->execute([$requestId, $userId, $userId]);
         $result = $stmt->fetch();
         
         return $result['count'] > 0;

@@ -24,7 +24,7 @@ class TaskController extends BaseController
         $tasks = Task::getByUser($user['id'], 'shared');
         
         $this->view('tasks-shared', [
-            'pageTitle' => t('shared_tasks') . ' - ' . env('APP_NAME'),
+            'pageTitle' => \t('shared_tasks') . ' - ' . \env('APP_NAME'),
             'user' => $user,
             'tasks' => $tasks,
         ]);
@@ -41,10 +41,41 @@ class TaskController extends BaseController
         $tasks = Task::getByUser($user['id'], 'private');
         
         $this->view('tasks-private', [
-            'pageTitle' => t('private_tasks') . ' - ' . env('APP_NAME'),
+            'pageTitle' => \t('private_tasks') . ' - ' . \env('APP_NAME'),
             'user' => $user,
             'tasks' => $tasks,
         ]);
+    }
+    
+    /**
+     * Get a single task by ID (JSON)
+     */
+    public function get(array $params): void
+    {
+        $this->requireAuth();
+        
+        $user = $this->getCurrentUser();
+        $taskId = (int)($params['id'] ?? 0);
+        
+        if (!$taskId) {
+            $this->json(['error' => 'Task ID required'], 400);
+        }
+        
+        // Check ownership
+        if (!Task::userOwns($taskId, $user['id'])) {
+            $this->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $task = Task::find($taskId);
+        
+        if (!$task) {
+            $this->json(['error' => 'Task not found'], 404);
+        }
+        
+        // Add completed boolean for easier frontend handling
+        $task['completed'] = ($task['status'] === 'completed');
+        
+        $this->json($task);
     }
     
     /**
@@ -84,28 +115,51 @@ class TaskController extends BaseController
         
         $taskData = [
             'user_id' => $user['id'],
-            'title' => sanitizeInput($this->getPost('title')),
-            'description' => sanitizeInput($this->getPost('description', '')),
-            'is_shared' => $isShared,
+            'title' => \sanitizeInput($this->getPost('title')),
+            'description' => \sanitizeInput($this->getPost('description', '')),
+            'is_shared' => $isShared ? 1 : 0,
             'status' => $status,
-            'due_date' => $this->getPost('due_date'),
         ];
         
         try {
             $task = Task::create($taskData);
             
-            // Send push notification if task is shared
+            // Send notifications if task is shared
             if ($isShared) {
                 try {
-                    $notificationService = new NotificationService(db());
+                    // Push notification
+                    $notificationService = new NotificationService(\db());
                     $notificationService->notifyTaskCreated($user['id'], $task);
+                    
+                    // Email notifications
+                    $emailService = new \App\Services\EmailService();
+                    if ($emailService->isConfigured()) {
+                        // Send to user
+                        $emailService->sendNotification(
+                            $user['email'],
+                            'New Shared Task Created',
+                            "You created a new shared task:\n\n" .
+                            "Title: {$task['title']}\n" .
+                            (!empty($task['description']) ? "Description: {$task['description']}\n" : '') .
+                            "\nView it at: " . \env('APP_URL') . "/tasks/shared"
+                        );
+                        
+                        // Send to admins
+                        $emailService->sendAdminNotification(
+                            'Shared Task Created',
+                            "User: {$user['name']} ({$user['email']})\n\n" .
+                            "Title: {$task['title']}\n" .
+                            (!empty($task['description']) ? "Description: {$task['description']}\n" : '') .
+                            "\nView it at: " . \env('APP_URL') . "/tasks/shared"
+                        );
+                    }
                 } catch (\Exception $e) {
                     // Log notification failure but don't fail the task creation
-                    logMessage("Failed to send task notification: " . $e->getMessage(), 'WARNING');
+                    \logMessage("Failed to send task notification: " . $e->getMessage(), 'WARNING');
                 }
             }
         } catch (\Exception $e) {
-            logMessage("Failed to create task: " . $e->getMessage(), 'ERROR');
+            \logMessage("Failed to create task: " . $e->getMessage(), 'ERROR');
             $this->json(['error' => 'Failed to create task'], 500);
         }
         
@@ -138,24 +192,25 @@ class TaskController extends BaseController
         $taskData = [];
         
         if ($this->getPost('title')) {
-            $taskData['title'] = sanitizeInput($this->getPost('title'));
+            $taskData['title'] = \sanitizeInput($this->getPost('title'));
         }
         
         if ($this->getPost('description') !== null) {
-            $taskData['description'] = sanitizeInput($this->getPost('description'));
+            $taskData['description'] = \sanitizeInput($this->getPost('description'));
         }
         
+        // Handle completed toggle (from checkbox)
+        if ($this->getPost('completed') !== null) {
+            $completed = $this->getPost('completed');
+            $taskData['status'] = $completed ? 'completed' : 'pending';
+        }
         // Validate status if provided
-        if ($this->getPost('status')) {
+        else if ($this->getPost('status')) {
             $status = $this->getPost('status');
             if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'], true)) {
                 $this->json(['error' => 'Invalid status value'], 400);
             }
             $taskData['status'] = $status;
-        }
-        
-        if ($this->getPost('due_date') !== null) {
-            $taskData['due_date'] = $this->getPost('due_date');
         }
         
         if (empty($taskData)) {

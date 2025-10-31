@@ -18,8 +18,8 @@ class PWAController extends BaseController
         header('Content-Type: application/json');
         
         $manifest = [
-            'name' => env('APP_NAME', 'IrmaJosh'),
-            'short_name' => env('APP_NAME', 'IrmaJosh'),
+            'name' => \env('APP_NAME', 'IrmaJosh'),
+            'short_name' => \env('APP_NAME', 'IrmaJosh'),
             'description' => 'Personal calendar and task management system',
             'start_url' => '/',
             'display' => 'standalone',
@@ -91,6 +91,9 @@ class PWAController extends BaseController
     {
         header('Content-Type: application/javascript');
         header('Service-Worker-Allowed: /');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         
         $swFile = __DIR__ . '/../../public_html/service-worker.js';
         

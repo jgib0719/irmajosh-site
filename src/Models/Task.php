@@ -36,7 +36,7 @@ class Task
             $data['user_id'],
             $data['title'],
             $data['description'] ?? null,
-            $data['is_shared'] ?? false,
+            isset($data['is_shared']) ? (int)$data['is_shared'] : 0,
             $data['status'] ?? 'pending',
             $data['due_date'] ?? null,
             $data['google_event_id'] ?? null

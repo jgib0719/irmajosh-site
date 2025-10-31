@@ -23,20 +23,18 @@ class DashboardController extends BaseController
         $user = $this->getCurrentUser();
         $userId = $user['id'];
         
-        // Get upcoming tasks
-        $upcomingTasks = Task::getUpcoming($userId, 7);
+        // Get recent tasks (pending and in-progress)
+        $recentTasks = array_slice(Task::getByStatus($userId, 'pending'), 0, 5);
+        $inProgressTasks = array_slice(Task::getByStatus($userId, 'in_progress'), 0, 5);
         
-        // Get overdue tasks
-        $overdueTasks = Task::getOverdue($userId);
-        
-        // Get recent schedule requests
-        $scheduleRequests = array_slice(ScheduleRequest::getByUser($userId), 0, 5);
+        // Get actionable schedule requests (not yet scheduled to calendar)
+        $scheduleRequests = array_slice(ScheduleRequest::getActionable($userId), 0, 5);
         
         $this->view('dashboard', [
-            'pageTitle' => t('dashboard') . ' - ' . env('APP_NAME'),
+            'pageTitle' => \t('dashboard') . ' - ' . \env('APP_NAME'),
             'user' => $user,
-            'upcomingTasks' => $upcomingTasks,
-            'overdueTasks' => $overdueTasks,
+            'recentTasks' => $recentTasks,
+            'inProgressTasks' => $inProgressTasks,
             'scheduleRequests' => $scheduleRequests,
         ]);
     }
