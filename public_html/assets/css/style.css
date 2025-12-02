@@ -1596,6 +1596,53 @@ a:hover {
     .fc .fc-daygrid-event {
         font-size: 0.7rem !important;
     }
+
+    /* Fix event text overflow on mobile */
+    .fc-event,
+    .fc-daygrid-event,
+    .fc-timegrid-event,
+    .fc-h-event {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+        display: block !important;
+    }
+    
+    /* Specific fix for daygrid events (all-day) */
+    .fc-daygrid-block-event .fc-event-main,
+    .fc-h-event .fc-event-main {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+        padding: 1px 2px !important;
+    }
+    
+    .fc-event-title {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: inline-block !important;
+        max-width: 100% !important;
+        vertical-align: top !important;
+    }
+
+    /* Ensure the container doesn't overflow the day cell */
+    .fc-daygrid-day-events {
+        overflow: hidden !important;
+        max-width: 100% !important;
+    }
+
+    /* Visual feedback on touch */
+    .fc-event:active,
+    .fc-event:focus {
+        opacity: 0.7 !important;
+        transform: scale(0.98) !important;
+        transition: all 0.1s !important;
+        box-shadow: 0 0 0 2px var(--text-primary) !important;
+        z-index: 100 !important; /* Bring to front */
+    }
     
     /* Hide view switcher on mobile */
     .fc-toolbar-chunk:last-child {

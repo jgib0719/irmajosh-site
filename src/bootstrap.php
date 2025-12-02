@@ -49,13 +49,23 @@ if (!is_dir($logDir)) {
     mkdir($logDir, 0755, true);
 }
 
+// Ensure session directory exists
+$sessionDir = __DIR__ . '/../storage/sessions';
+if (!is_dir($sessionDir)) {
+    mkdir($sessionDir, 0755, true);
+}
+
 // Session security (BEFORE session_start)
+ini_set('session.save_path', $sessionDir);
+ini_set('session.cookie_lifetime', '2592000'); // 30 days
 ini_set('session.cookie_httponly', '1');
 ini_set('session.cookie_secure', '1'); // HTTPS only
 ini_set('session.cookie_samesite', 'None'); // Lax allows OAuth redirects
 ini_set('session.use_strict_mode', '1');
 session_name('__Host-irmajosh_session'); // __Host- prefix (must use session_name, not ini_set)
 ini_set('session.gc_maxlifetime', '2592000'); // 30 days
+ini_set('session.gc_probability', '1'); // Enable internal GC
+ini_set('session.gc_divisor', '100'); // 1% chance to clean up
 ini_set('session.sid_length', '48');
 ini_set('session.sid_bits_per_character', '6');
 

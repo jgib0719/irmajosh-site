@@ -58,8 +58,10 @@ class CalendarController extends BaseController
         if ($start && $end) {
             // Show ALL calendar events (shared calendar)
             $events = CalendarEvent::getAllByDateRange($start, $end);
+            \logMessage("Calendar fetch for user {$user['id']}: Found " . count($events) . " events", 'INFO');
             // Show user's tasks AND shared tasks
             $tasks = Task::getSharedAndUserByDateRange($user['id'], $start, $end);
+            \logMessage("Calendar fetch for user {$user['id']}: Found " . count($tasks) . " tasks", 'INFO');
         } else {
             $events = CalendarEvent::getAll();
             $tasks = Task::getSharedAndUser($user['id']);
@@ -67,11 +69,15 @@ class CalendarController extends BaseController
         
         // Format events for FullCalendar
         $formattedEvents = array_map(function($event) {
+            // Ensure ISO8601 format for FullCalendar
+            $start = $event['start_at'] ? str_replace(' ', 'T', $event['start_at']) : null;
+            $end = $event['end_at'] ? str_replace(' ', 'T', $event['end_at']) : null;
+            
             return [
                 'id' => $event['id'],
                 'title' => $event['title'],
-                'start' => $event['start_at'],
-                'end' => $event['end_at'],
+                'start' => $start,
+                'end' => $end,
                 'allDay' => (bool)$event['is_all_day'],
                 'backgroundColor' => $event['color'] ?? '#3b82f6',
                 'borderColor' => $event['color'] ?? '#3b82f6',
@@ -90,10 +96,13 @@ class CalendarController extends BaseController
         // Format tasks for FullCalendar
         $formattedTasks = array_map(function($task) {
             $isCompleted = $task['status'] === 'completed';
+            // Ensure ISO8601 format
+            $start = $task['due_date'] ? str_replace(' ', 'T', $task['due_date']) : null;
+            
             return [
                 'id' => 'task_' . $task['id'],
                 'title' => ($isCompleted ? '✓ ' : '☐ ') . $task['title'],
-                'start' => $task['due_date'],
+                'start' => $start,
                 'backgroundColor' => $isCompleted ? '#9ca3af' : '#10b981', // Gray if done, Green if pending
                 'borderColor' => $isCompleted ? '#9ca3af' : '#10b981',
                 'description' => $task['description'] ?? '',

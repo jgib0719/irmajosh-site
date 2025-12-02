@@ -30,3 +30,14 @@ $id = $db->lastInsertId();
 ## JavaScript Event Delegation
 **Issue:** Event listeners attached to elements inside a modal (like close buttons) might not work if the modal HTML is dynamic or if the listeners are attached before the modal exists/is visible.
 **Solution:** Use event delegation on a static parent (like `document` or a container) or ensure listeners are attached after the element is definitely in the DOM.
+
+## FullCalendar & Date Formats
+**Issue:** FullCalendar (and some browsers) can be strict about ISO8601 date formats. Sending `YYYY-MM-DD HH:MM:SS` (MySQL default) might result in events not rendering on some clients.
+**Solution:** Always format dates as strict ISO8601 (`YYYY-MM-DDTHH:MM:SS`) in the JSON response.
+```php
+// ❌ MySQL Format
+'start' => $event['start_at'], // "2025-12-01 10:00:00"
+
+// ✅ ISO8601 Format
+'start' => str_replace(' ', 'T', $event['start_at']), // "2025-12-01T10:00:00"
+```
