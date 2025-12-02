@@ -374,6 +374,8 @@ a:hover {
 .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     gap: var(--spacing-xs);
     padding: 0.625rem 1.25rem;
     border: none;
@@ -750,8 +752,8 @@ a:hover {
     gap: var(--spacing-xs);
     border-bottom: 2px solid var(--border-color);
     margin-bottom: var(--spacing-lg);
-    overflow-x: visible;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
 }
 
 .tab {
@@ -911,14 +913,133 @@ a:hover {
 
 /* ========== Calendar ========== */
 .calendar-container {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
 }
 
 #calendar {
     max-width: 100%;
+    width: 100%;
+}
+
+/* Desktop calendar container styling */
+@media (min-width: 769px) {
+    .calendar-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+    }
+
+    .fc .fc-daygrid-day-frame {
+        aspect-ratio: 1 / 1;
+    }
+}
+
+/* FullCalendar Custom Styling */
+.fc {
+    background: #2d3748;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: none;
+}
+
+.fc-toolbar-title {
+    color: white !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+.fc .fc-toolbar {
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+}
+
+.fc .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.fc .fc-button {
+    background: var(--primary) !important;
+    border: none !important;
+    padding: var(--spacing-sm) var(--spacing-md) !important;
+    border-radius: var(--radius-md) !important;
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+.fc .fc-button:hover {
+    background: var(--primary-dark) !important;
+}
+
+.fc .fc-button-active {
+    background: var(--primary-dark) !important;
+}
+
+.fc .fc-button-group {
+    gap: var(--spacing-sm);
+}
+
+.fc .fc-daygrid-day-number {
+    color: white !important;
+    padding: var(--spacing-xs) !important;
+    font-size: 1rem !important;
+}
+
+.fc .fc-col-header-cell {
+    background: #1a202c !important;
+    border-color: #4a5568 !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+    color: #cbd5e0 !important;
+    font-weight: 600 !important;
+    padding: var(--spacing-sm) !important;
+}
+
+.fc .fc-daygrid-day {
+    background: #2d3748 !important;
+    border-color: #4a5568 !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+    background: #3d4a5e !important;
+}
+
+.fc .fc-daygrid-day.fc-day-other {
+    background: #232b38 !important;
+}
+
+.fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+    color: #718096 !important;
+}
+
+/* Past days styling */
+.fc .fc-daygrid-day.fc-day-past {
+    background: #1a202c !important;
+    opacity: 0.6;
+}
+
+.fc .fc-daygrid-day.fc-day-past .fc-daygrid-day-number {
+    color: #4a5568 !important;
+}
+
+/* Past events - strikethrough */
+.fc .fc-day-past .fc-event-title {
+    text-decoration: line-through !important;
+}
+
+.fc .fc-day-past .fc-event {
+    opacity: 0.7;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border-color: #4a5568 !important;
 }
 
 /* ========== Schedule Requests ========== */
@@ -1114,6 +1235,36 @@ a:hover {
     color: var(--text-primary);
 }
 
+/* Recurring event edit modal specific styles */
+#recurringEditModal .modal-body {
+    text-align: center;
+    padding: 2rem 1.5rem;
+}
+
+#recurringEditModal .modal-body p {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+#recurringEditModal .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-top: none;
+}
+
+#recurringEditModal .modal-footer .btn {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    min-width: auto;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* ========== Buttons ========== */
+
 /* ========== Alerts ========== */
 .alert {
     padding: var(--spacing-md);
@@ -1146,10 +1297,59 @@ a:hover {
     color: #92400e;
 }
 
+/* ========== Notifications ========== */
+.notification-card {
+    margin-top: var(--spacing-xl);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: var(--spacing-md);
+}
+
+.notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.notification-icon {
+    font-size: 1.25rem;
+}
+
+.notification-status {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .notification-card {
+        margin-top: var(--spacing-lg);
+        width: 100%;
+        max-width: none;
+    }
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
+    /* Kill ALL scrollbars on mobile */
+    html, body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        position: relative;
+    }
+    
+    body {
+        width: 100% !important;
+    }
+    
     .content-wrapper {
         padding: 0 var(--spacing-md);
+        overflow-x: hidden;
+        max-width: 100vw;
     }
     
     .nav-links {
@@ -1187,6 +1387,15 @@ a:hover {
         white-space: nowrap;
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: 0.875rem;
+    }
+    
+    /* Hide nav text labels on mobile, show only icons */
+    .nav-text {
+        display: none;
+    }
+    
+    .nav-icon {
+        font-size: 1.5rem;
     }
     
     .page-header {
@@ -1239,17 +1448,28 @@ a:hover {
     
     /* PRIORITY 2: Fix tab container width and overflow */
     .tabs {
-        margin-left: 0;
-        margin-right: 0;
-        padding-left: var(--spacing-sm);
-        padding-right: var(--spacing-sm);
-        max-width: 100vw;
-        width: 100%;
+        /* Break out of content-wrapper padding */
+        margin-left: calc(var(--spacing-md) * -1);
+        margin-right: calc(var(--spacing-md) * -1);
+        padding-left: var(--spacing-md);
+        padding-right: var(--spacing-md);
+        width: 100vw;
+        overflow-x: hidden !important;
+        overflow-y: visible;
+        box-sizing: border-box;
     }
     
     .tab {
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    
+    .tab-add-btn {
+        flex-shrink: 0;
+        font-size: 0.8rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        margin-right: var(--spacing-sm); /* Add right padding to button */
     }
     
     .modal-content {
@@ -1276,23 +1496,116 @@ a:hover {
         justify-content: flex-end;
     }
     
-    /* Calendar mobile adjustments */
+    /* Calendar mobile adjustments - FULL WIDTH */
+    .calendar-page {
+        margin-left: calc(var(--spacing-md) * -1) !important;
+        margin-right: calc(var(--spacing-md) * -1) !important;
+        width: calc(100% + (var(--spacing-md) * 2)) !important;
+        max-width: none !important;
+    }
+    
+    .calendar-page .content-wrapper {
+        padding: 0 !important;
+        max-width: none !important;
+    }
+    
+    .calendar-page .page-header {
+        padding-left: var(--spacing-md);
+        padding-right: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+    
     .calendar-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+        background: transparent !important;
+        width: 100% !important;
     }
     
     #calendar {
-        min-width: 300px;
+        min-width: unset;
+        width: 100%;
     }
     
-    /* Ensure no horizontal overflow */
-    body {
-        overflow-x: hidden;
+    /* Fix FullCalendar mobile layout */
+    .fc {
+        border-radius: 0 !important;
     }
     
+    .fc .fc-toolbar {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
+    }
+    
+    .fc .fc-toolbar-chunk {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .fc .fc-toolbar-chunk:first-child {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .fc .fc-toolbar-title {
+        font-size: 1.25rem !important;
+        text-align: center;
+        flex-grow: 1;
+    }
+    
+    .fc .fc-button {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    .fc .fc-button-group {
+        display: flex;
+        gap: var(--spacing-xs);
+    }
+    
+    .fc .fc-daygrid-day-number {
+        font-size: 0.875rem !important;
+    }
+    
+    .fc .fc-col-header-cell-cushion {
+        font-size: 0.75rem !important;
+        padding: 0.25rem !important;
+    }
+    
+    .fc .fc-daygrid-day-frame {
+        min-height: 95px !important;
+    }
+    
+    .fc .fc-daygrid-day-top {
+        flex-direction: row !important;
+    }
+    
+    /* No scroll overrides needed - height: auto handles it */
+    .fc .fc-scrollgrid {
+        border: none !important;
+    }
+    
+    /* Make event text smaller */
+    .fc .fc-event-title,
+    .fc .fc-event-time,
+    .fc .fc-daygrid-event {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Hide view switcher on mobile */
+    .fc-toolbar-chunk:last-child {
+        display: none;
+    }
+    
+    /* Ensure no horizontal overflow - NUCLEAR OPTION */
     * {
-        max-width: 100%;
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
     }
     
     img, video, iframe {

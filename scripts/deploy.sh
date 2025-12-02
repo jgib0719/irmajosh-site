@@ -35,6 +35,9 @@ composer validate --no-interaction
 echo "Running migrations..."
 php scripts/migrate.php
 
+echo "Updating crontab..."
+crontab config/crontab
+
 echo "Setting permissions..."
 mkdir -p storage/logs storage/cache
 chown -R www-data:www-data storage/

@@ -48,6 +48,31 @@ class User
         
         return $user ?: null;
     }
+
+    /**
+     * Find user by iCal token
+     */
+    public static function findByIcalToken(string $token): ?array
+    {
+        $stmt = db()->prepare('SELECT * FROM users WHERE ical_token = ? LIMIT 1');
+        $stmt->execute([$token]);
+        $user = $stmt->fetch();
+        
+        return $user ?: null;
+    }
+
+    /**
+     * Refresh iCal token for a user
+     */
+    public static function refreshIcalToken(int $userId): string
+    {
+        $token = bin2hex(random_bytes(32));
+        
+        $stmt = db()->prepare('UPDATE users SET ical_token = ? WHERE id = ?');
+        $stmt->execute([$token, $userId]);
+        
+        return $token;
+    }
     
     /**
      * Create or update user (upsert)
@@ -57,6 +82,9 @@ class User
     {
         $existing = self::findBySub($userInfo['sub']);
         
+        $name = $userInfo['name'] ?? '';
+        $picture = $userInfo['picture'] ?? null;
+
         if ($existing) {
             // Update existing user
             $stmt = db()->prepare('
@@ -70,27 +98,29 @@ class User
             
             $stmt->execute([
                 $userInfo['email'],
-                $userInfo['name'] ?? '',
-                $userInfo['picture'] ?? null,
+                $name,
+                $picture,
                 $userInfo['sub']
             ]);
             
             return self::findBySub($userInfo['sub']);
         } else {
             // Create new user
-            $stmt = db()->prepare('
-                INSERT INTO users (google_user_id, email, name, picture, created_at, updated_at)
-                VALUES (?, ?, ?, ?, NOW(), NOW())
+            $db = db();
+            $stmt = $db->prepare('
+                INSERT INTO users (google_user_id, email, name, picture, ical_token, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
             ');
             
             $stmt->execute([
                 $userInfo['sub'],
                 $userInfo['email'],
-                $userInfo['name'] ?? '',
-                $userInfo['picture'] ?? null
+                $name,
+                $picture,
+                bin2hex(random_bytes(32))
             ]);
             
-            $userId = db()->lastInsertId();
+            $userId = $db->lastInsertId();
             
             // Log user creation
             logMessage("New user created: " . redactPII($userInfo['email']) . " (sub: {$userInfo['sub']})", 'INFO');
@@ -135,10 +165,7 @@ class User
             $stmt = db()->prepare('DELETE FROM tasks WHERE user_id = ?');
             $stmt->execute([$userId]);
             
-            // Delete schedule requests (where user is sender or recipient)
-            $stmt = db()->prepare('DELETE FROM schedule_requests WHERE sender_id = ? OR recipient_id = ?');
-            $stmt->execute([$userId, $userId]);
-            
+
             // Delete user
             $stmt = db()->prepare('DELETE FROM users WHERE id = ?');
             $stmt->execute([$userId]);

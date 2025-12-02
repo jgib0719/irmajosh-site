@@ -12,7 +12,15 @@ declare(strict_types=1);
  */
 function authMiddleware(): void
 {
-    requireAuth();
+    \logMessage('authMiddleware called', 'DEBUG');
+    try {
+        requireAuth();
+        \logMessage('authMiddleware passed', 'DEBUG');
+    } catch (\Throwable $e) {
+        \logMessage('authMiddleware ERROR: ' . $e->getMessage(), 'ERROR');
+        \logMessage('authMiddleware STACK: ' . $e->getTraceAsString(), 'ERROR');
+        throw $e;
+    }
 }
 
 /**
@@ -63,8 +71,10 @@ function rateLimitMiddleware(): void
     
     $identifier = getClientIp();
     $cacheKey = "rate_limit:{$requestPath}:{$identifier}";
-    $limit = 100; // 100 requests
-    $window = 900; // 15 minutes
+    
+    // Get rate limit settings from environment variables with defaults
+    $limit = (int)env('RATE_LIMIT_PER_WINDOW', 100);
+    $window = (int)env('RATE_LIMIT_WINDOW_SECONDS', 900); // 15 minutes
     
     $cacheDir = __DIR__ . '/../storage/rate_limits';
     $cacheFile = $cacheDir . '/' . md5($cacheKey) . '.json';

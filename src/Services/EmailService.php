@@ -140,41 +140,6 @@ class EmailService
     }
     
     /**
-     * Send schedule request email
-     */
-    public function sendScheduleRequest(string $recipientEmail, array $slots, string $subject, ?string $message = null): bool
-    {
-        $slotsHtml = '<ul>';
-        foreach ($slots as $slot) {
-            $start = date('F j, Y g:i A', strtotime($slot['start_time']));
-            $end = date('g:i A', strtotime($slot['end_time']));
-            $slotsHtml .= "<li>{$start} - {$end}</li>";
-        }
-        $slotsHtml .= '</ul>';
-        
-        $body = '<h2>' . htmlspecialchars($subject) . '</h2>';
-        
-        if ($message) {
-            $body .= '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
-        }
-        
-        $body .= '<h3>Available Time Slots:</h3>';
-        $body .= $slotsHtml;
-        $body .= '<p>Please select a time slot that works for you.</p>';
-        
-        // Plain text version
-        $altBody = strip_tags($body);
-        
-        return $this->send([
-            'to' => $recipientEmail,
-            'subject' => $subject,
-            'body' => $body,
-            'alt_body' => $altBody,
-            'is_html' => true,
-        ]);
-    }
-    
-    /**
      * Get admin email addresses from EMAIL_ALLOWLIST
      */
     private function getAdminEmails(): array
@@ -193,18 +158,8 @@ class EmailService
      */
     public function sendNotification(string $recipientEmail, string $subject, string $message): bool
     {
-        $body = '
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2>' . htmlspecialchars($subject) . '</h2>
-                <div style="padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
-                    ' . nl2br(htmlspecialchars($message)) . '
-                </div>
-                <p style="color: #666; font-size: 12px; margin-top: 20px;">
-                    This is an automated message from ' . htmlspecialchars(\env('APP_NAME')) . '.
-                </p>
-            </div>
-        ';
-        
+        $content = '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
+        $body = $this->_renderEmailTemplate($subject, $content);
         $altBody = strip_tags($message);
         
         return $this->send([
@@ -228,18 +183,8 @@ class EmailService
             return false;
         }
         
-        $body = '
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2>' . htmlspecialchars($subject) . '</h2>
-                <div style="padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
-                    ' . nl2br(htmlspecialchars($message)) . '
-                </div>
-                <p style="color: #666; font-size: 12px; margin-top: 20px;">
-                    This is an automated admin notification from ' . htmlspecialchars(\env('APP_NAME')) . '.
-                </p>
-            </div>
-        ';
-        
+        $content = '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
+        $body = $this->_renderEmailTemplate($subject, $content, true);
         $altBody = strip_tags($message);
         
         return $this->send([
@@ -258,28 +203,28 @@ class EmailService
     {
         $subject = 'Welcome to ' . \env('APP_NAME');
         
-        $body = '
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2>Welcome, ' . htmlspecialchars($name) . '!</h2>
-                <p>Thank you for joining ' . htmlspecialchars(\env('APP_NAME')) . '.</p>
-                <p>You can now access your personal calendar and task management system.</p>
-                <p style="margin-top: 30px;">
-                    <a href="' . \env('APP_URL') . '/dashboard" 
-                       style="background-color: #4285f4; color: white; padding: 10px 20px; 
-                              text-decoration: none; border-radius: 5px; display: inline-block;">
-                        Go to Dashboard
-                    </a>
-                </p>
-                <p style="color: #666; font-size: 12px; margin-top: 40px;">
-                    If you have any questions, please contact us at ' . 
-                    htmlspecialchars(\env('MAIL_FROM_ADDRESS')) . '
-                </p>
-            </div>
+        $content = '
+            <h3 style="margin-top: 0;">Welcome, ' . htmlspecialchars($name) . '!</h3>
+            <p>Thank you for joining ' . htmlspecialchars(\env('APP_NAME')) . '.</p>
+            <p>You can now access your personal calendar and task management system.</p>
+            <p style="margin-top: 30px; text-align: center;">
+                <a href="' . \env('APP_URL') . '/dashboard" 
+                   style="background-color: #4285f4; color: white; padding: 12px 24px; 
+                          text-decoration: none; border-radius: 5px; display: inline-block;">
+                    Go to Dashboard
+                </a>
+            </p>
+            <p style="color: #666; font-size: 12px; margin-top: 40px; text-align: center;">
+                If you have any questions, please contact us at ' . 
+                htmlspecialchars(\env('MAIL_FROM_ADDRESS')) . '
+            </p>
         ';
+
+        $body = $this->_renderEmailTemplate($subject, $content);
         
-        $altBody = "Welcome, {$name}!\nn" .
+        $altBody = "Welcome, {$name}!\n\n" .
                    "Thank you for joining " . \env('APP_NAME') . ".\n" .
-                   "You can now access your personal calendar and task management system.\nn" .
+                   "You can now access your personal calendar and task management system.\n\n" .
                    "Visit: " . \env('APP_URL') . "/dashboard";
         
         return $this->send([
@@ -291,6 +236,33 @@ class EmailService
         ]);
     }
     
+    /**
+     * Render a consistent HTML email template
+     */
+    private function _renderEmailTemplate(string $subject, string $content, bool $isAdmin = false): string
+    {
+        $appName = htmlspecialchars(\env('APP_NAME', 'IrmaJosh'));
+        $footerText = $isAdmin 
+            ? "This is an automated admin notification from {$appName}."
+            : "This is an automated message from {$appName}.";
+
+        return '
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 5px; overflow: hidden;">
+                <div style="background-color: #f5f5f5; padding: 20px; border-bottom: 1px solid #e0e0e0;">
+                    <h2 style="margin: 0; color: #333;">' . htmlspecialchars($subject) . '</h2>
+                </div>
+                <div style="padding: 20px; color: #555;">
+                    ' . $content . '
+                </div>
+                <div style="background-color: #f5f5f5; padding: 15px 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+                    <p style="color: #666; font-size: 12px; margin: 0;">
+                        ' . $footerText . '
+                    </p>
+                </div>
+            </div>
+        ';
+    }
+
     /**
      * Check if email sending is configured
      */

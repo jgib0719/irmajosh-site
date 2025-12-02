@@ -17,36 +17,68 @@ class Task
      */
     public static function create(array $data): array
     {
-        $stmt = db()->prepare('
-            INSERT INTO tasks (
-                user_id, 
-                title, 
-                description, 
-                is_shared, 
-                status, 
-                due_date, 
-                google_event_id,
-                created_at, 
-                updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        ');
-        
-        $stmt->execute([
-            $data['user_id'],
-            $data['title'],
-            $data['description'] ?? null,
-            isset($data['is_shared']) ? (int)$data['is_shared'] : 0,
-            $data['status'] ?? 'pending',
-            $data['due_date'] ?? null,
-            $data['google_event_id'] ?? null
-        ]);
-        
-        $taskId = db()->lastInsertId();
-        
-        logMessage("Task created: ID {$taskId} by user {$data['user_id']}", 'INFO');
-        
-        return self::find((int)$taskId);
+        $isShared = isset($data['is_shared']) ? (int)$data['is_shared'] : 0;
+        $status = $data['status'] ?? 'pending';
+        $dueDate = $data['due_date'] ?? null;
+        $googleEventId = $data['google_event_id'] ?? null;
+
+        try {
+            $pdo = db();
+            $stmt = $pdo->prepare('
+                INSERT INTO tasks (
+                    user_id, 
+                    title, 
+                    description, 
+                    is_shared, 
+                    status, 
+                    due_date, 
+                    google_event_id,
+                    created_at, 
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ');
+            
+            $result = $stmt->execute([
+                $data['user_id'],
+                $data['title'],
+                $data['description'] ?? null,
+                $isShared,
+                $status,
+                $dueDate,
+                $googleEventId
+            ]);
+            
+            if (!$result) {
+                $errorInfo = $stmt->errorInfo();
+                logMessage("Task insert failed: " . json_encode($errorInfo), 'ERROR');
+                throw new \Exception("Failed to insert task");
+            }
+            
+            // Get the last insert ID immediately after execute on the same connection
+            $taskId = (int)$pdo->lastInsertId();
+            
+            if ($taskId === 0) {
+                // Fallback: try to get the ID from the database
+                $fallbackStmt = $pdo->query('SELECT LAST_INSERT_ID() as id');
+                $fallbackResult = $fallbackStmt->fetch();
+                $taskId = (int)($fallbackResult['id'] ?? 0);
+                
+                if ($taskId === 0) {
+                    logMessage("Task insert succeeded but could not retrieve ID. Data: " . json_encode($data), 'ERROR');
+                    throw new \Exception("Failed to get task ID after insert");
+                }
+                
+                logMessage("Retrieved task ID via LAST_INSERT_ID() query: {$taskId}", 'WARNING');
+            }
+            
+            logMessage("Task created: ID {$taskId} by user {$data['user_id']}", 'INFO');
+            
+            return self::find($taskId);
+        } catch (\PDOException $e) {
+            logMessage("PDO Exception creating task: " . $e->getMessage(), 'ERROR');
+            throw $e;
+        }
     }
     
     /**
@@ -152,6 +184,53 @@ class Task
     }
     
     /**
+     * Get tasks for a user within a date range
+     */
+    public static function getByUserAndDateRange(int $userId, string $start, string $end): array
+    {
+        $stmt = db()->prepare('
+            SELECT * FROM tasks 
+            WHERE user_id = ? 
+            AND due_date BETWEEN ? AND ?
+            ORDER BY due_date ASC
+        ');
+        $stmt->execute([$userId, $start, $end]);
+        
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Get tasks for a user OR shared tasks within a date range
+     */
+    public static function getSharedAndUserByDateRange(int $userId, string $start, string $end): array
+    {
+        $stmt = db()->prepare('
+            SELECT * FROM tasks 
+            WHERE (user_id = ? OR is_shared = 1)
+            AND due_date BETWEEN ? AND ?
+            ORDER BY due_date ASC
+        ');
+        $stmt->execute([$userId, $start, $end]);
+        
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Get tasks for a user OR shared tasks
+     */
+    public static function getSharedAndUser(int $userId): array
+    {
+        $stmt = db()->prepare('
+            SELECT * FROM tasks 
+            WHERE (user_id = ? OR is_shared = 1)
+            ORDER BY due_date ASC, created_at DESC
+        ');
+        $stmt->execute([$userId]);
+        
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Update a task
      */
     public static function update(int $id, array $data): bool
@@ -240,5 +319,25 @@ class Task
         $result = $stmt->fetch();
         
         return $result['count'] > 0;
+    }
+    
+    /**
+     * Search tasks
+     */
+    public static function search(string $query, int $userId): array
+    {
+        $searchTerm = '%' . $query . '%';
+        
+        $stmt = db()->prepare('
+            SELECT * FROM tasks 
+            WHERE user_id = ? 
+            AND (title LIKE ? OR description LIKE ?)
+            ORDER BY due_date DESC
+            LIMIT 20
+        ');
+        
+        $stmt->execute([$userId, $searchTerm, $searchTerm]);
+        
+        return $stmt->fetchAll();
     }
 }

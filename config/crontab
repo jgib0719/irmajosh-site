@@ -1,0 +1,5 @@
+# IrmaJosh.com Cron Schedule
+# Apply with: crontab config/crontab
+
+# Send calendar event reminders (every 5 minutes)
+*/5 * * * * php /var/www/irmajosh.com/scripts/send_reminders.php >> /var/www/irmajosh.com/storage/logs/cron.log 2>&1

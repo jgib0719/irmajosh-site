@@ -30,6 +30,7 @@ class AuthService
      */
     public function initiateLogin(): string
     {
+        \logMessage('Session ID at login initiation: ' . session_id(), 'DEBUG');
         // Generate code verifier (43-128 chars, base64url)
         $codeVerifier = rtrim(strtr(base64_encode(random_bytes(64)), '+/', '-_'), '=');
         $_SESSION['oauth_code_verifier'] = $codeVerifier;
@@ -45,6 +46,8 @@ class AuthService
         $_SESSION['oauth_state'] = bin2hex(random_bytes(32)); // 64-char hex
         $_SESSION['oauth_state_expiry'] = time() + 600;
         
+        \logMessage('Session data at login initiation: ' . json_encode($_SESSION), 'DEBUG');
+
         // Build authorization URL
         $params = http_build_query([
             'client_id' => \env('GOOGLE_CLIENT_ID'),
@@ -238,6 +241,8 @@ class AuthService
      */
     public function handleCallback(string $code, string $state): array
     {
+        \logMessage('Session ID at callback: ' . session_id(), 'DEBUG');
+        \logMessage('Session data at callback: ' . json_encode($_SESSION), 'DEBUG');
         // 1. Validate state parameter
         if (!$this->validateState($state)) {
             throw new \Exception('Invalid state parameter');

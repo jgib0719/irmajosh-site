@@ -102,6 +102,27 @@ return [
         'handler' => [\App\Controllers\CalendarController::class, 'sync'],
         'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
+
+    [
+        'method' => 'GET',
+        'path' => '/calendar/feed/{token}',
+        'handler' => [\App\Controllers\CalendarController::class, 'feed'],
+        'middleware' => ['rateLimitMiddleware']
+    ],
+
+    [
+        'method' => 'POST',
+        'path' => '/calendar/feed/refresh',
+        'handler' => [\App\Controllers\CalendarController::class, 'refreshFeedToken'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'GET',
+        'path' => '/calendar/search',
+        'handler' => [\App\Controllers\CalendarController::class, 'search'],
+        'middleware' => ['authMiddleware']
+    ],
     
     // ========================================================================
     // Tasks (authenticated)
@@ -157,62 +178,27 @@ return [
     ],
     
     // ========================================================================
-    // Schedule Requests (authenticated)
+    // Date Night (authenticated)
     // ========================================================================
     
     [
         'method' => 'GET',
-        'path' => '/schedule',
-        'handler' => [\App\Controllers\ScheduleController::class, 'index'],
+        'path' => '/date-night',
+        'handler' => [\App\Controllers\DateNightController::class, 'index'],
         'middleware' => ['authMiddleware']
     ],
     
     [
         'method' => 'POST',
-        'path' => '/schedule/send-request',
-        'handler' => [\App\Controllers\ScheduleController::class, 'sendRequest'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
-    ],
-    
-    [
-        'method' => 'GET',
-        'path' => '/schedule/{id}',
-        'handler' => [\App\Controllers\ScheduleController::class, 'getRequest'],
-        'middleware' => ['authMiddleware']
-    ],
-    
-    [
-        'method' => 'PUT',
-        'path' => '/schedule/{id}/status',
-        'handler' => [\App\Controllers\ScheduleController::class, 'updateStatus'],
+        'path' => '/date-night/complete',
+        'handler' => [\App\Controllers\DateNightController::class, 'complete'],
         'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
     [
         'method' => 'POST',
-        'path' => '/schedule/{id}/accept',
-        'handler' => [\App\Controllers\ScheduleController::class, 'acceptRequest'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
-    ],
-    
-    [
-        'method' => 'POST',
-        'path' => '/schedule/{id}/decline',
-        'handler' => [\App\Controllers\ScheduleController::class, 'declineRequest'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
-    ],
-    
-    [
-        'method' => 'POST',
-        'path' => '/schedule/{id}/schedule',
-        'handler' => [\App\Controllers\ScheduleController::class, 'scheduleToCalendar'],
-        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
-    ],
-    
-    [
-        'method' => 'DELETE',
-        'path' => '/schedule/{id}',
-        'handler' => [\App\Controllers\ScheduleController::class, 'deleteRequest'],
+        'path' => '/date-night/create',
+        'handler' => [\App\Controllers\DateNightController::class, 'create'],
         'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
     
@@ -258,13 +244,6 @@ return [
     
     [
         'method' => 'GET',
-        'path' => '/manifest.json',
-        'handler' => [\App\Controllers\PWAController::class, 'manifest'],
-        'middleware' => []
-    ],
-    
-    [
-        'method' => 'GET',
         'path' => '/service-worker.js',
         'handler' => [\App\Controllers\PWAController::class, 'serviceWorker'],
         'middleware' => []
@@ -304,5 +283,37 @@ return [
         'path' => '/csp-report',
         'handler' => [\App\Controllers\SecurityController::class, 'cspReport'],
         'middleware' => ['rateLimitMiddleware']
+    ],
+    
+    // ========================================================================
+    // Shopping List (authenticated)
+    // ========================================================================
+    
+    [
+        'method' => 'GET',
+        'path' => '/shopping-list',
+        'handler' => [\App\Controllers\ShoppingController::class, 'index'],
+        'middleware' => ['authMiddleware']
+    ],
+    
+    [
+        'method' => 'POST',
+        'path' => '/shopping-list',
+        'handler' => [\App\Controllers\ShoppingController::class, 'create'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'PUT',
+        'path' => '/shopping-list/{id}/toggle',
+        'handler' => [\App\Controllers\ShoppingController::class, 'toggle'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
+    ],
+    
+    [
+        'method' => 'DELETE',
+        'path' => '/shopping-list/{id}',
+        'handler' => [\App\Controllers\ShoppingController::class, 'delete'],
+        'middleware' => ['authMiddleware', 'csrfMiddleware', 'rateLimitMiddleware']
     ],
 ];

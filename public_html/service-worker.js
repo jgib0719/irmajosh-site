@@ -3,12 +3,11 @@
  * Implements caching strategies and offline support
  */
 
-const CACHE_VERSION = 'v11-20251031-tasks-improvements';
+const CACHE_VERSION = 'v40-20251130-shopping-list';
 const CACHE_NAME = `irmajosh-${CACHE_VERSION}`;
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
-    '/',
     '/views/offline.html',
     '/assets/css/style.css',
     '/assets/js/app.js',
@@ -21,7 +20,10 @@ const NETWORK_ONLY_ROUTES = [
     '/auth/',
     '/api/',
     '/csp-report',
-    '/tasks'  // Task operations must always be fresh
+    '/tasks',  // Task operations must always be fresh
+    '/shopping-list', // Shopping list is shared and dynamic
+    '/date-night/complete',
+    '/date-night/create'
 ];
 
 // Routes that should try network first, then cache (no overlap with network-only)
@@ -29,7 +31,8 @@ const NETWORK_FIRST_ROUTES = [
     '/dashboard',
     '/calendar',
     '/schedule',
-    '/health'
+    '/health',
+    '/date-night'
 ];
 
 // Maximum age for cached responses (7 days)
@@ -85,6 +88,11 @@ self.addEventListener('fetch', event => {
         return;
     }
     
+    // Skip root path to avoid redirect issues
+    if (url.pathname === '/') {
+        return;
+    }
+    
     // Skip cross-origin requests
     if (url.origin !== location.origin) {
         return;
@@ -134,8 +142,8 @@ async function networkFirst(request) {
     try {
         const response = await fetch(request);
         
-        // Cache successful responses
-        if (response.ok) {
+        // Cache successful responses, but NOT redirects
+        if (response.ok && !response.redirected) {
             const cache = await caches.open(CACHE_NAME);
             cache.put(request, response.clone());
         }
@@ -195,8 +203,8 @@ async function fetchAndCache(request) {
     try {
         const response = await fetch(request);
         
-        // Only cache successful GET requests
-        if (response.ok && request.method === 'GET') {
+        // Only cache successful GET requests that are NOT redirects
+        if (response.ok && request.method === 'GET' && !response.redirected) {
             const cache = await caches.open(CACHE_NAME);
             
             // Add cache date header

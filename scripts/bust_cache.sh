@@ -6,6 +6,10 @@
 
 echo "🔄 Busting cache for frontend assets..."
 
+# Regenerate autoloader to pick up new classes
+echo "📚 Updating Composer autoloader..."
+composer dump-autoload -o
+
 # Touch CSS and JS files to update their modification time
 touch /var/www/irmajosh.com/public_html/assets/css/style.css
 touch /var/www/irmajosh.com/public_html/assets/js/app.js

@@ -12,7 +12,6 @@ return [
     'dashboard' => 'Dashboard',
     'calendar' => 'Calendar',
     'tasks' => 'Tasks',
-    'schedule' => 'Schedule',
     
     // Auth
     'login_with_google' => 'Log in with Google',
@@ -22,7 +21,6 @@ return [
     // Dashboard
     'upcoming_tasks' => 'Upcoming Tasks',
     'recent_events' => 'Recent Events',
-    'schedule_requests' => 'Schedule Requests',
     
     // Tasks
     'shared_tasks' => 'Shared Tasks',
@@ -42,11 +40,6 @@ return [
     'event_title' => 'Event Title',
     'event_start' => 'Start Time',
     'event_end' => 'End Time',
-    
-    // Schedule Requests
-    'send_request' => 'Send Schedule Request',
-    'request_sent' => 'Schedule request sent successfully',
-    'available_slots' => 'Available Time Slots',
     
     // Errors
     'error_occurred' => 'An error occurred',
@@ -71,4 +64,7 @@ return [
     'back' => 'Back',
     'submit' => 'Submit',
     'close' => 'Close',
+    
+    // Empty States
+    'no_tasks_yet' => 'No Tasks',
 ];

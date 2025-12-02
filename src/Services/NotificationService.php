@@ -101,23 +101,6 @@ class NotificationService
     }
     
     /**
-     * Send schedule request notification
-     */
-    public function notifyScheduleRequest(int $userId, array $request): array
-    {
-        return $this->sendToUser(
-            $userId,
-            'New Schedule Request',
-            $request['subject'],
-            [
-                'type' => 'schedule',
-                'requestId' => $request['id'],
-                'url' => '/schedule'
-            ]
-        );
-    }
-    
-    /**
      * Send calendar event notification
      */
     public function notifyEventCreated(int $userId, array $event): array

@@ -50,8 +50,19 @@ window.closeModal = function(modalId) {
  * Close modal when clicking outside
  */
 document.addEventListener('click', function(e) {
+    // Close when clicking backdrop
     if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
         const modalId = e.target.id;
+        if (modalId) {
+            closeModal(modalId);
+        }
+    }
+    
+    // Close when clicking close button (data-close-modal)
+    const closeBtn = e.target.closest('[data-close-modal]');
+    if (closeBtn) {
+        e.preventDefault();
+        const modalId = closeBtn.getAttribute('data-close-modal');
         if (modalId) {
             closeModal(modalId);
         }

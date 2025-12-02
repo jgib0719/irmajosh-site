@@ -109,7 +109,7 @@ class TaskController extends BaseController
         
         // Validate status if provided
         $status = $this->getPost('status', 'pending');
-        if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'], true)) {
+        if (!in_array($status, ['pending', 'completed'], true)) {
             $status = 'pending';
         }
         
@@ -131,28 +131,7 @@ class TaskController extends BaseController
                     $notificationService = new NotificationService(\db());
                     $notificationService->notifyTaskCreated($user['id'], $task);
                     
-                    // Email notifications
-                    $emailService = new \App\Services\EmailService();
-                    if ($emailService->isConfigured()) {
-                        // Send to user
-                        $emailService->sendNotification(
-                            $user['email'],
-                            'New Shared Task Created',
-                            "You created a new shared task:\n\n" .
-                            "Title: {$task['title']}\n" .
-                            (!empty($task['description']) ? "Description: {$task['description']}\n" : '') .
-                            "\nView it at: " . \env('APP_URL') . "/tasks/shared"
-                        );
-                        
-                        // Send to admins
-                        $emailService->sendAdminNotification(
-                            'Shared Task Created',
-                            "User: {$user['name']} ({$user['email']})\n\n" .
-                            "Title: {$task['title']}\n" .
-                            (!empty($task['description']) ? "Description: {$task['description']}\n" : '') .
-                            "\nView it at: " . \env('APP_URL') . "/tasks/shared"
-                        );
-                    }
+                    // Email notifications removed per user request
                 } catch (\Exception $e) {
                     // Log notification failure but don't fail the task creation
                     \logMessage("Failed to send task notification: " . $e->getMessage(), 'WARNING');
@@ -207,7 +186,7 @@ class TaskController extends BaseController
         // Validate status if provided
         else if ($this->getPost('status')) {
             $status = $this->getPost('status');
-            if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'], true)) {
+            if (!in_array($status, ['pending', 'completed'], true)) {
                 $this->json(['error' => 'Invalid status value'], 400);
             }
             $taskData['status'] = $status;

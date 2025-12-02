@@ -92,41 +92,61 @@ if (isset($route['middleware'])) {
 
 // Execute handler
 try {
+    logMessage("Router executing: {$method} {$uri}", 'DEBUG');
+    logMessage("Handler: " . json_encode($handler), 'DEBUG');
+    logMessage("Params: " . json_encode($params), 'DEBUG');
+    
     if (is_callable($handler)) {
         // Closure handler
+        logMessage("Executing closure handler", 'DEBUG');
         $handler($params);
     } elseif (is_array($handler) && count($handler) === 2) {
         // Controller action handler [ControllerClass, 'method']
         [$controllerClass, $action] = $handler;
         
+        logMessage("Attempting to load controller: {$controllerClass}::{$action}", 'DEBUG');
+        
         if (!class_exists($controllerClass)) {
             throw new Exception("Controller class not found: {$controllerClass}");
         }
         
+        logMessage("Controller class loaded: {$controllerClass}", 'DEBUG');
+        
         $controller = new $controllerClass();
+        
+        logMessage("Controller instantiated: {$controllerClass}", 'DEBUG');
         
         if (!method_exists($controller, $action)) {
             throw new Exception("Controller action not found: {$controllerClass}::{$action}");
         }
         
+        logMessage("Executing controller action: {$controllerClass}::{$action}", 'DEBUG');
         $controller->$action($params);
+        logMessage("Controller action completed: {$controllerClass}::{$action}", 'DEBUG');
     } else {
         throw new Exception('Invalid route handler');
     }
-} catch (Exception $e) {
-    // Log error
-    logMessage('Router error: ' . $e->getMessage(), 'ERROR');
+} catch (Throwable $e) {
+    // Log and show error with query if available
+    $error = $e->getMessage();
+    $file = $e->getFile() . ':' . $e->getLine();
+    $trace = $e->getTraceAsString();
     
-    // Show 500 error page
-    http_response_code(500);
-    if (file_exists(__DIR__ . '/../public_html/views/errors/500.php')) {
-        require __DIR__ . '/../public_html/views/errors/500.php';
+    // Try to extract SQL from PDOException
+    if ($e instanceof PDOException) {
+        logMessage('PDO ERROR: ' . $error, 'ERROR');
+        logMessage('SQL ERROR FILE: ' . $file, 'ERROR');
+        logMessage('TRACE: ' . $trace, 'ERROR');
     } else {
-        if (env('APP_ENV') === 'production') {
-            echo '<!DOCTYPE html><html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>';
-        } else {
-            echo '<!DOCTYPE html><html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><pre>' . htmlspecialchars($e->getMessage() . "\n" . $e->getTraceAsString()) . '</pre></body></html>';
-        }
+        logMessage('Router error: ' . $error, 'ERROR');
     }
+    
+    http_response_code(500);
+    echo '<!DOCTYPE html><html><head><title>500 Error</title></head><body>';
+    echo '<h1>Error</h1>';
+    echo '<p>' . htmlspecialchars($error) . '</p>';
+    echo '<h2>File</h2><p>' . htmlspecialchars($file) . '</p>';
+    echo '<h2>Stack Trace</h2><pre>' . htmlspecialchars($trace) . '</pre>';
+    echo '</body></html>';
     exit;
 }

@@ -12,7 +12,6 @@ return [
     'dashboard' => 'Dasbor',
     'calendar' => 'Kalender',
     'tasks' => 'Tugas',
-    'schedule' => 'Jadwal',
     
     // Auth
     'login_with_google' => 'Masuk dengan Google',
@@ -22,7 +21,6 @@ return [
     // Dashboard
     'upcoming_tasks' => 'Tugas Mendatang',
     'recent_events' => 'Acara Terbaru',
-    'schedule_requests' => 'Permintaan Jadwal',
     
     // Tasks
     'shared_tasks' => 'Tugas Bersama',
@@ -42,11 +40,6 @@ return [
     'event_title' => 'Judul Acara',
     'event_start' => 'Waktu Mulai',
     'event_end' => 'Waktu Selesai',
-    
-    // Schedule Requests
-    'send_request' => 'Kirim Permintaan Jadwal',
-    'request_sent' => 'Permintaan jadwal berhasil dikirim',
-    'available_slots' => 'Slot Waktu Tersedia',
     
     // Errors
     'error_occurred' => 'Terjadi kesalahan',
@@ -71,4 +64,7 @@ return [
     'back' => 'Kembali',
     'submit' => 'Kirim',
     'close' => 'Tutup',
+    
+    // Empty States
+    'no_tasks_yet' => 'Tidak Ada Tugas',
 ];

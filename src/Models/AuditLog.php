@@ -20,9 +20,10 @@ class AuditLog
     {
         // Redact PII from details before storing
         $details = $data['details'] ?? '';
-        $redactedDetails = redactPII($details);
+        $redactedDetails = \redactPII($details);
         
-        $stmt = db()->prepare('
+        $db = db();
+        $stmt = $db->prepare('
             INSERT INTO audit_logs (
                 user_id,
                 event_type,
@@ -37,14 +38,29 @@ class AuditLog
         $stmt->execute([
             $data['user_id'] ?? null,
             $data['event_type'] ?? $data['action'] ?? 'unknown',
-            $data['ip_address'] ?? getClientIp(),
+            $data['ip_address'] ?? \getClientIp(),
             $data['user_agent'] ?? ($_SERVER['HTTP_USER_AGENT'] ?? null),
             $redactedDetails
         ]);
         
-        $logId = db()->lastInsertId();
+        $logId = $db->lastInsertId();
         
-        return self::find((int)$logId);
+        $result = self::find((int)$logId);
+        
+        // Ensure we return an array (fallback to minimal data if find fails)
+        if ($result === null) {
+            return [
+                'id' => (int)$logId,
+                'user_id' => $data['user_id'] ?? null,
+                'event_type' => $data['event_type'] ?? $data['action'] ?? 'unknown',
+                'ip_address' => $data['ip_address'] ?? \getClientIp(),
+                'user_agent' => $data['user_agent'] ?? ($_SERVER['HTTP_USER_AGENT'] ?? null),
+                'details' => $redactedDetails,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+        }
+        
+        return $result;
     }
     
     /**
@@ -203,7 +219,7 @@ class AuditLog
         
         $deleted = $stmt->rowCount();
         
-        logMessage("Deleted {$deleted} audit logs older than {$days} days", 'INFO');
+        \logMessage("Deleted {$deleted} audit logs older than {$days} days", 'INFO');
         
         return $deleted;
     }

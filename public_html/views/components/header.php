@@ -55,9 +55,13 @@
                     <span class="nav-icon">✓</span>
                     <span class="nav-text"><?= t('tasks') ?></span>
                 </a>
-                <a href="/schedule" class="nav-link <?= (strpos($_SERVER['REQUEST_URI'], '/schedule') === 0) ? 'active' : '' ?>">
-                    <span class="nav-icon">📧</span>
-                    <span class="nav-text"><?= t('schedule') ?></span>
+                <a href="/shopping-list" class="nav-link <?= (strpos($_SERVER['REQUEST_URI'], '/shopping-list') === 0) ? 'active' : '' ?>">
+                    <span class="nav-icon">🛒</span>
+                    <span class="nav-text">Shopping List</span>
+                </a>
+                <a href="/date-night" class="nav-link <?= (strpos($_SERVER['REQUEST_URI'], '/date-night') === 0) ? 'active' : '' ?>">
+                    <span class="nav-icon">🎲</span>
+                    <span class="nav-text">Date Night</span>
                 </a>
             </nav>
         <?php endif; ?>

@@ -49,9 +49,17 @@ function db(): PDO
 {
     static $pdo = null; // Per-request reuse
     
-    // Return existing connection if available
+    // Return existing connection if available and still active
     if ($pdo !== null) {
-        return $pdo;
+        try {
+            // A simple, low-cost query to check if the connection is alive
+            $pdo->query('SELECT 1');
+            return $pdo;
+        } catch (PDOException $e) {
+            // Connection is lost, reset to null to re-establish below
+            $pdo = null;
+            logMessage('Database connection lost, attempting to reconnect.', 'WARNING');
+        }
     }
     
     $options = [
@@ -74,6 +82,7 @@ function db(): PDO
         return $pdo;
     } catch (PDOException $e) {
         // Log error with sanitized message (no credentials)
+        // Use error_log which goes to web server logs if file logging fails
         error_log('[CRITICAL] Database connection failed: ' . $e->getMessage());
         
         // Check if we're in a web request
@@ -266,7 +275,11 @@ function logMessage(string $message, string $level = 'INFO'): void
     $timestamp = date('Y-m-d H:i:s');
     $logEntry = "[{$timestamp}] [{$level}] {$message}" . PHP_EOL;
     
-    file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
+    try {
+        @file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
+    } catch (Throwable $e) {
+        // Silently fail if logging fails
+    }
 }
 
 /**
@@ -467,10 +480,13 @@ function validateUrl(string $url): bool
 
 /**
  * Sanitize input string
+ * 
+ * Trims whitespace. Does NOT escape HTML entities to avoid double-escaping
+ * when displaying data (which should be done at output time).
  */
 function sanitizeInput(string $input): string
 {
-    return htmlspecialchars(trim($input), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    return trim($input);
 }
 
 // ============================================================================
